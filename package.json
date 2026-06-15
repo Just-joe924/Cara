@@ -1,0 +1,22 @@
+{
+  "name": "cara-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n client,server -c green,blue \"npm run dev -w client\" \"npm run dev -w server\"",
+    "dev:client": "npm run dev -w client",
+    "dev:server": "npm run dev -w server",
+    "build": "npm run build -w client && npm run build -w server",
+    "seed": "tsx supabase/seed/seed-products.ts"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "concurrently": "^9.0.1",
+    "dotenv": "^16.4.5",
+    "tsx": "^4.19.1"
+  }
+}
