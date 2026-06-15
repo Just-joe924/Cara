@@ -1,12 +1,48 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Feature from '../components/Feature'
 import Newsletter from '../components/Newsletter'
 import ProductCard from '../components/ProductCard'
-import { featuredProducts, newProducts } from '../data/products'
+import { listNewest } from '../api/products'
+import type { Product } from '../types'
 
 const gridClass = 'grid grid-cols-1 gap-7 pt-2.5 sm:grid-cols-2 lg:grid-cols-4'
 
+function ProductGrid({ products, loading }: { products: Product[]; loading: boolean }) {
+  if (loading) {
+    return (
+      <div className="flex justify-center py-10">
+        <i className="fa-solid fa-spinner fa-spin text-3xl text-primary"></i>
+      </div>
+    )
+  }
+  return (
+    <div className={gridClass}>
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  )
+}
+
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    listNewest(16)
+      .then((data) => active && setProducts(data))
+      .catch((err) => console.error('Failed to load products:', err))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const featured = products.slice(0, 8)
+  const newArrivals = products.slice(8, 16)
+
   return (
     <>
       <section className="flex h-[40vh] w-full flex-col items-start justify-center bg-hero bg-cover [background-position:top_25%_right_0] px-5 sm:px-20 lg:h-[90vh]">
@@ -26,11 +62,7 @@ export default function Home() {
       <section className="section-x text-center">
         <h2 className="text-3xl text-ink sm:text-[46px]">Featured Products</h2>
         <p className="text-muted">Summer Collection New Modern Design</p>
-        <div className={gridClass}>
-          {featuredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <ProductGrid products={featured} loading={loading} />
       </section>
 
       <section className="my-10 flex h-[40vh] flex-col items-center justify-center bg-banner-repair bg-cover bg-center text-center">
@@ -46,11 +78,7 @@ export default function Home() {
       <section className="section-x text-center">
         <h2 className="text-3xl text-ink sm:text-[46px]">New Arrivals</h2>
         <p className="text-muted">Summer Collection New Modern Design</p>
-        <div className={gridClass}>
-          {newProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <ProductGrid products={newArrivals} loading={loading} />
       </section>
 
       <section className="section-x flex flex-col gap-5 sm:flex-row sm:justify-between">

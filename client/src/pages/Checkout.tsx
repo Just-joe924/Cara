@@ -176,7 +176,7 @@ export default function Checkout() {
           <ul className="mb-4">
             {items.map((item) => (
               <li key={item.product.id} className="flex items-center gap-3 border-b border-[#f0f0f0] py-2.5">
-                <img className="h-[50px] w-[50px] rounded-md object-cover" src={item.product.image} alt={item.product.name} />
+                <img className="h-[50px] w-[50px] rounded-md object-cover" src={item.product.image_url ?? ''} alt={item.product.name} />
                 <div className="flex flex-1 flex-col">
                   <span className="text-[13px] font-semibold text-ink">{item.product.name}</span>
                   <span className="text-xs text-muted-2">Qty: {item.quantity}</span>

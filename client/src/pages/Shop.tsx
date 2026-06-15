@@ -1,15 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Newsletter from '../components/Newsletter'
 import ProductCard from '../components/ProductCard'
-import { products } from '../data/products'
+import { listCategories, listProducts } from '../api/products'
+import type { Category, Product } from '../types'
 
-type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'rating' | 'name'
+type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'name'
 
 const sortOptions: { value: SortKey; label: string }[] = [
-  { value: 'featured', label: 'Featured' },
+  { value: 'newest', label: 'Newest' },
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
-  { value: 'rating', label: 'Top Rated' },
   { value: 'name', label: 'Name: A–Z' },
 ]
 
@@ -18,24 +18,35 @@ const selectClass =
 const labelClass = 'flex flex-col gap-1.5 text-xs font-semibold text-muted'
 
 export default function Shop() {
-  const [query, setQuery] = useState('')
-  const [brand, setBrand] = useState('all')
-  const [category, setCategory] = useState<'all' | 'featured' | 'new'>('all')
-  const [sort, setSort] = useState<SortKey>('featured')
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const brands = useMemo(
-    () => ['all', ...Array.from(new Set(products.map((p) => p.brand))).sort()],
-    [],
-  )
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('all')
+  const [sort, setSort] = useState<SortKey>('newest')
+
+  useEffect(() => {
+    let active = true
+    Promise.all([listProducts(), listCategories()])
+      .then(([prods, cats]) => {
+        if (!active) return
+        setProducts(prods)
+        setCategories(cats)
+      })
+      .catch((err) => console.error('Failed to load shop:', err))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     const filtered = products.filter((p) => {
-      const matchesQuery =
-        !q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)
-      const matchesBrand = brand === 'all' || p.brand === brand
-      const matchesCategory = category === 'all' || p.category === category
-      return matchesQuery && matchesBrand && matchesCategory
+      const matchesQuery = !q || p.name.toLowerCase().includes(q)
+      const matchesCategory = category === 'all' || p.categories?.slug === category
+      return matchesQuery && matchesCategory
     })
 
     const sorted = [...filtered]
@@ -46,27 +57,22 @@ export default function Shop() {
       case 'price-desc':
         sorted.sort((a, b) => b.price - a.price)
         break
-      case 'rating':
-        sorted.sort((a, b) => b.rating - a.rating)
-        break
       case 'name':
         sorted.sort((a, b) => a.name.localeCompare(b.name))
         break
-      case 'featured':
+      case 'newest':
       default:
         break
     }
     return sorted
-  }, [query, brand, category, sort])
+  }, [products, query, category, sort])
 
-  const hasActiveFilters =
-    query.trim() !== '' || brand !== 'all' || category !== 'all' || sort !== 'featured'
+  const hasActiveFilters = query.trim() !== '' || category !== 'all' || sort !== 'newest'
 
   function resetFilters() {
     setQuery('')
-    setBrand('all')
     setCategory('all')
-    setSort('featured')
+    setSort('newest')
   }
 
   return (
@@ -81,7 +87,7 @@ export default function Shop() {
           <i className="fa-solid fa-magnifying-glass text-primary"></i>
           <input
             type="search"
-            placeholder="Search products or brands..."
+            placeholder="Search products..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search products"
@@ -92,23 +98,11 @@ export default function Shop() {
         <div className="flex flex-wrap items-end gap-3.5">
           <label className={labelClass}>
             Category
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as typeof category)}
-              className={selectClass}
-            >
-              <option value="all">All</option>
-              <option value="featured">Featured</option>
-              <option value="new">New Arrivals</option>
-            </select>
-          </label>
-
-          <label className={labelClass}>
-            Brand
-            <select value={brand} onChange={(e) => setBrand(e.target.value)} className={selectClass}>
-              {brands.map((b) => (
-                <option key={b} value={b}>
-                  {b === 'all' ? 'All Brands' : b}
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
+              <option value="all">All Categories</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.slug}>
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -138,23 +132,31 @@ export default function Shop() {
       </section>
 
       <section className="section-x pt-6">
-        <p className="mb-2.5 text-sm text-muted-2">
-          Showing {visible.length} of {products.length} products
-        </p>
-        {visible.length === 0 ? (
-          <div className="py-16 text-center">
-            <i className="fa-regular fa-face-frown mb-4 text-5xl text-primary-border"></i>
-            <h4 className="mb-4 text-xl">No products match your filters.</h4>
-            <button type="button" className="btn-primary" onClick={resetFilters}>
-              Clear filters
-            </button>
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <i className="fa-solid fa-spinner fa-spin text-3xl text-primary"></i>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-4">
-            {visible.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <p className="mb-2.5 text-sm text-muted-2">
+              Showing {visible.length} of {products.length} products
+            </p>
+            {visible.length === 0 ? (
+              <div className="py-16 text-center">
+                <i className="fa-regular fa-face-frown mb-4 text-5xl text-primary-border"></i>
+                <h4 className="mb-4 text-xl">No products match your filters.</h4>
+                <button type="button" className="btn-primary" onClick={resetFilters}>
+                  Clear filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-4">
+                {visible.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
 

@@ -56,7 +56,7 @@ export default function Cart() {
                     </button>
                   </td>
                   <td className="pt-[15px]">
-                    <img className="mx-auto w-[70px]" src={item.product.image} alt={item.product.name} />
+                    <img className="mx-auto w-[70px]" src={item.product.image_url ?? ''} alt={item.product.name} />
                   </td>
                   <td className="pt-[15px]">{item.product.name}</td>
                   <td className="pt-[15px]">${item.product.price.toFixed(2)}</td>

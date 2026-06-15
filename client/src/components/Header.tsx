@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -20,6 +21,16 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const { totalQuantity } = useCart()
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  async function handleSignOut() {
+    setMobileOpen(false)
+    await signOut()
+    navigate('/')
+  }
+
+  const close = () => setMobileOpen(false)
 
   return (
     <header className="sticky top-0 left-0 z-[999] flex items-center justify-between bg-header px-5 py-5 shadow-[0_5px_15px_rgba(0,0,0,0.06)] sm:px-10 lg:px-20">
@@ -35,25 +46,62 @@ export default function Header() {
         >
           {navLinks.map((link) => (
             <li key={link.to} className="mb-6 px-5 lg:mb-0">
-              <NavLink
-                to={link.to}
-                end={link.to === '/'}
-                className={linkClass}
-                onClick={() => setMobileOpen(false)}
-              >
+              <NavLink to={link.to} end={link.to === '/'} className={linkClass} onClick={close}>
                 {link.label}
               </NavLink>
             </li>
           ))}
+
+          {user ? (
+            <>
+              <li className="mb-6 px-5 lg:mb-0">
+                <NavLink to="/account" className={linkClass} onClick={close}>
+                  Account
+                </NavLink>
+              </li>
+              <li className="mb-6 px-5 lg:mb-0">
+                <button
+                  onClick={handleSignOut}
+                  className="text-base font-semibold text-[#1a1a1a] transition hover:text-primary"
+                >
+                  Sign Out
+                </button>
+              </li>
+            </>
+          ) : (
+            <li className="mb-6 px-5 lg:mb-0">
+              <NavLink to="/login" className={linkClass} onClick={close}>
+                Sign In
+              </NavLink>
+            </li>
+          )}
+
+          {user && (
+            <li className="mb-6 px-5 lg:mb-0 lg:hidden">
+              <NavLink to="/wishlist" className={linkClass} onClick={close}>
+                Wishlist
+              </NavLink>
+            </li>
+          )}
+
+          {/* Desktop wishlist + bag icons */}
+          {user && (
+            <li className="relative mb-6 hidden px-5 lg:mb-0 lg:block">
+              <Link to="/wishlist" onClick={close} className="text-[#1a1a1a] hover:text-primary" aria-label="Wishlist">
+                <i className="fa-regular fa-heart"></i>
+              </Link>
+            </li>
+          )}
           <li className="relative mb-6 hidden px-5 lg:mb-0 lg:block">
-            <Link to="/cart" onClick={() => setMobileOpen(false)} className="text-[#1a1a1a] hover:text-primary">
+            <Link to="/cart" onClick={close} className="text-[#1a1a1a] hover:text-primary" aria-label="Cart">
               <i className="fa-solid fa-bag-shopping"></i>
               {totalQuantity > 0 && <span className="cart-count">{totalQuantity}</span>}
             </Link>
           </li>
+
           <button
             aria-label="Close menu"
-            onClick={() => setMobileOpen(false)}
+            onClick={close}
             className="absolute top-7 left-7 text-2xl text-ink lg:hidden"
           >
             <i className="fa-solid fa-xmark"></i>
@@ -61,16 +109,17 @@ export default function Header() {
         </ul>
       </nav>
 
-      <div className="flex items-center lg:hidden">
-        <Link to="/cart" className="relative text-2xl text-[#1a1a1a]">
+      <div className="flex items-center gap-4 lg:hidden">
+        {user && (
+          <Link to="/wishlist" className="text-2xl text-[#1a1a1a]" aria-label="Wishlist">
+            <i className="fa-regular fa-heart"></i>
+          </Link>
+        )}
+        <Link to="/cart" className="relative text-2xl text-[#1a1a1a]" aria-label="Cart">
           <i className="fa-solid fa-bag-shopping"></i>
           {totalQuantity > 0 && <span className="cart-count">{totalQuantity}</span>}
         </Link>
-        <button
-          aria-label="Open menu"
-          onClick={() => setMobileOpen(true)}
-          className="pl-5 text-2xl text-[#1a1a1a]"
-        >
+        <button aria-label="Open menu" onClick={() => setMobileOpen(true)} className="text-2xl text-[#1a1a1a]">
           <i className="fa-solid fa-outdent"></i>
         </button>
       </div>
