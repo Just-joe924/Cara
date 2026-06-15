@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&family=Pompiere&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans text-ink;
+  }
+}
+
+@layer components {
+  /* Standard section padding: 20px / 40px / 80px across breakpoints */
+  .section-x {
+    @apply px-5 py-10 sm:px-10 lg:px-20;
+  }
+
+  /* Buttons */
+  .btn-normal {
+    @apply cursor-pointer rounded bg-white px-[30px] py-[15px] text-sm font-semibold text-black outline-none transition;
+  }
+  .btn-primary {
+    @apply cursor-pointer rounded bg-primary px-[30px] py-[15px] text-sm font-semibold text-white outline-none transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-white {
+    @apply cursor-pointer border border-white bg-transparent px-[18px] py-[11px] text-[13px] font-semibold text-white outline-none transition hover:border-primary hover:bg-primary;
+  }
+
+  /* Full-bleed page header / hashtag banners */
+  .page-banner {
+    @apply flex h-[40vh] w-full flex-col items-center justify-center bg-cover bg-center text-center text-white;
+  }
+  .page-banner h2 {
+    @apply text-3xl font-semibold sm:text-4xl;
+  }
+
+  /* Product card */
+  .pro-card {
+    @apply relative cursor-pointer rounded-[25px] border border-primary-border p-3 shadow-[20px_20px_30px_rgba(0,0,0,0.02)] transition duration-200 hover:shadow-[20px_20px_30px_rgba(0,0,0,0.06)];
+  }
+
+  /* Form controls */
+  .form-input {
+    @apply w-full rounded border border-[#e1e1e1] px-[15px] py-3 text-sm outline-none focus:border-primary;
+  }
+
+  /* Cart-count badge on the nav bag icon */
+  .cart-count {
+    @apply absolute -right-2.5 -top-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-white;
+  }
+}
