@@ -1,0 +1,10 @@
+{
+  "name": "@cara/server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "echo \"server not implemented yet (Phase 4)\" && exit 0",
+    "build": "echo \"server not implemented yet (Phase 4)\" && exit 0"
+  }
+}
