@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { createOrder } from '../api/orders'
 
 interface ShippingForm {
   fullName: string
@@ -31,6 +32,8 @@ export default function Checkout() {
   const [form, setForm] = useState<ShippingForm>(EMPTY_FORM)
   const [errors, setErrors] = useState<Partial<Record<keyof ShippingForm, string>>>({})
   const [orderId, setOrderId] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const total = subtotal + SHIPPING_FLAT
 
@@ -58,13 +61,29 @@ export default function Checkout() {
     return Object.keys(next).length === 0
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
+    setSubmitError('')
     if (items.length === 0 || !validate()) return
-    const id = 'CARA-' + Math.floor(performance.now()).toString(36).toUpperCase().slice(-6)
-    setOrderId(id)
-    clearCart()
-    window.scrollTo(0, 0)
+    setSubmitting(true)
+    try {
+      const order = await createOrder({
+        full_name: form.fullName,
+        email: form.email,
+        address: form.address,
+        city: form.city,
+        zip: form.zip,
+        country: form.country,
+        payment_method: form.payment,
+      })
+      setOrderId(order.id)
+      await clearCart() // clears client cart state (server already cleared the DB cart)
+      window.scrollTo(0, 0)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to place order')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const inputClass = 'w-full rounded border border-[#e1e1e1] px-[15px] py-3 text-sm outline-none focus:border-primary'
@@ -76,10 +95,14 @@ export default function Checkout() {
         <i className="fa-solid fa-circle-check text-[64px] text-primary"></i>
         <h2 className="mt-5 text-3xl text-ink">Thank you for your order!</h2>
         <p className="my-3 text-muted">
-          Your order <strong>{orderId}</strong> has been placed
+          Your order <strong>#{orderId.slice(0, 8)}</strong> has been placed
           {placedItemCount > 0 ? ` (${placedItemCount} item${placedItemCount > 1 ? 's' : ''})` : ''}.
           <br />
-          A confirmation has been sent to <strong>{form.email}</strong>.
+          Track it anytime in{' '}
+          <Link to="/account" className="font-semibold text-primary">
+            your account
+          </Link>
+          .
         </p>
         <p className="text-muted">This is a demo store — no payment was processed.</p>
         <div className="mt-3 flex justify-center gap-3">
@@ -166,8 +189,11 @@ export default function Checkout() {
             </label>
           </div>
 
-          <button type="submit" className="btn-primary mt-7 w-full">
-            Place Order — ${total.toFixed(2)}
+          {submitError && (
+            <p className="mt-4 rounded bg-[#fdecec] px-3 py-2 text-sm text-accent">{submitError}</p>
+          )}
+          <button type="submit" className="btn-primary mt-7 w-full" disabled={submitting}>
+            {submitting ? 'Placing order…' : `Place Order — $${total.toFixed(2)}`}
           </button>
         </form>
 
