@@ -22,11 +22,14 @@ cp server/.env.example server/.env   # server keys (Phase 4+)
 - **service-role key** → root `.env` (seed) and `server/.env` only. **Secret.**
 
 ## 3. Database schema
-Apply `supabase/migrations/0001_init.sql` to the project, either:
-- **Dashboard:** SQL Editor → paste the file → Run, or
+Apply the migrations **in order** to the project, either:
+- **Dashboard:** SQL Editor → paste each file → Run, or
 - **CLI:** `supabase link --project-ref <ref>` then `supabase db push`.
 
-This creates all tables, the auto-profile trigger, and RLS policies.
+1. `supabase/migrations/0001_init.sql` — tables, auto-profile trigger, RLS policies.
+2. `supabase/migrations/0002_fix_profile_trigger.sql` — makes `profiles.full_name`
+   nullable and the signup trigger null-safe (required if your `profiles.full_name`
+   was created NOT NULL, which otherwise causes a 500 on signups without a name).
 
 ## 4. Seed products (dev)
 ```bash
@@ -50,8 +53,8 @@ legacy/    original static HTML/CSS site (reference only)
 ```
 
 ## Status by phase
-- ✅ Phase 1 — monorepo + full Tailwind migration (UI unchanged, still local data this phase)
-- ✅ Phase 2 — DB schema + RLS + DummyJSON seed (files; apply with the steps above)
-- ⏳ Phase 3 — frontend ↔ Supabase (auth, products-from-DB, DB cart, wishlist)
-- ⏳ Phase 4 — Express order-finalize endpoint
+- ✅ Phase 1 — monorepo + full Tailwind migration
+- ✅ Phase 2 — DB schema + RLS + DummyJSON seed
+- ✅ Phase 3 — frontend ↔ Supabase (auth, products-from-DB, DB cart, wishlist)
+- ✅ Phase 4 — Express order-finalize endpoint (`POST /api/orders`)
 - ⏳ Phase 5 — Stripe Checkout

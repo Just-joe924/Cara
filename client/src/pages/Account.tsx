@@ -48,7 +48,7 @@ export default function Account() {
           <dl className="space-y-3 text-sm">
             <div>
               <dt className="text-muted-2">Name</dt>
-              <dd className="font-semibold text-ink">{profile?.full_name ?? '—'}</dd>
+              <dd className="font-semibold text-ink">{profile?.full_name || '—'}</dd>
             </div>
             <div>
               <dt className="text-muted-2">Email</dt>

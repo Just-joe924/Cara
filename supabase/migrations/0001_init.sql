@@ -87,7 +87,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data ->> 'full_name')
+  values (new.id, nullif(new.raw_user_meta_data ->> 'full_name', ''))
   on conflict (id) do nothing;
   return new;
 end;
