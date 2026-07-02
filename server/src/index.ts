@@ -2,11 +2,16 @@ import express from 'express'
 import cors from 'cors'
 import { env } from './lib/env.js'
 import { ordersRouter } from './routes/orders.js'
-import { stripeRouter } from './routes/stripe.js'
+import { stripeRouter, stripeWebhookHandler } from './routes/stripe.js'
 
 const app = express()
 
 app.use(cors({ origin: env.CLIENT_ORIGIN }))
+
+// Stripe webhook must receive the RAW body for signature verification, so it is
+// registered before express.json().
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), stripeWebhookHandler)
+
 app.use(express.json())
 
 app.get('/health', (_req, res) => {
