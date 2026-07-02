@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
-import { createOrder } from '../api/orders'
+import { createOrder, createCheckoutSession } from '../api/orders'
 
 interface ShippingForm {
   fullName: string
@@ -66,16 +66,26 @@ export default function Checkout() {
     setSubmitError('')
     if (items.length === 0 || !validate()) return
     setSubmitting(true)
+
+    const shipping = {
+      full_name: form.fullName,
+      email: form.email,
+      address: form.address,
+      city: form.city,
+      zip: form.zip,
+      country: form.country,
+      payment_method: form.payment,
+    }
+
     try {
-      const order = await createOrder({
-        full_name: form.fullName,
-        email: form.email,
-        address: form.address,
-        city: form.city,
-        zip: form.zip,
-        country: form.country,
-        payment_method: form.payment,
-      })
+      if (form.payment === 'card') {
+        // Hand off to Stripe Checkout; the cart is cleared on payment success.
+        const { url } = await createCheckoutSession(shipping)
+        window.location.href = url
+        return
+      }
+      // Cash on delivery — finalize immediately via the API.
+      const order = await createOrder(shipping)
       setOrderId(order.id)
       await clearCart() // clears client cart state (server already cleared the DB cart)
       window.scrollTo(0, 0)
@@ -193,7 +203,13 @@ export default function Checkout() {
             <p className="mt-4 rounded bg-[#fdecec] px-3 py-2 text-sm text-accent">{submitError}</p>
           )}
           <button type="submit" className="btn-primary mt-7 w-full" disabled={submitting}>
-            {submitting ? 'Placing order…' : `Place Order — $${total.toFixed(2)}`}
+            {submitting
+              ? form.payment === 'card'
+                ? 'Redirecting to payment…'
+                : 'Placing order…'
+              : form.payment === 'card'
+                ? `Pay $${total.toFixed(2)}`
+                : `Place Order — $${total.toFixed(2)}`}
           </button>
         </form>
 
