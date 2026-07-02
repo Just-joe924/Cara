@@ -39,5 +39,5 @@ legacy/    Original static HTML/CSS/JS site, kept for reference
 | 1 | Monorepo + full Tailwind migration | ✅ |
 | 2 | Supabase schema + RLS + DummyJSON seed | ✅ (apply per SETUP.md) |
 | 3 | Frontend ↔ Supabase: auth, products-from-DB, DB cart, wishlist | ⏳ |
-| 4 | Express order-finalize endpoint | ⏳ |
-| 5 | Stripe Checkout | ⏳ |
+| 4 | Express order-finalize endpoint | ✅ |
+| 5 | Stripe Checkout (session + webhook + verify) | ✅ |

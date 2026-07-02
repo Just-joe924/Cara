@@ -52,9 +52,31 @@ supabase/  migrations/ + seed/
 legacy/    original static HTML/CSS site (reference only)
 ```
 
+## 6. Stripe payments (Phase 5)
+Card checkout uses Stripe Checkout. Without keys it returns `501` and card
+payment is disabled (COD still works). To enable:
+
+1. Add test keys to `server/.env`:
+   ```
+   STRIPE_SECRET_KEY=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...   # from `stripe listen` or the dashboard
+   ```
+2. (Local webhooks, optional) forward events with the Stripe CLI:
+   ```
+   stripe listen --forward-to localhost:4000/api/webhooks/stripe
+   ```
+   The success page also verifies + fulfills via `GET /api/checkout/verify`,
+   so orders finalize even without the CLI.
+
+Flow: `POST /api/checkout/session` creates a **pending** order + Stripe session →
+redirect to Stripe → on success, the webhook (or verify endpoint) runs the
+idempotent `markOrderPaid()` (decrement stock, clear cart, set `paid`).
+
+Use test card `4242 4242 4242 4242`, any future expiry/CVC.
+
 ## Status by phase
 - ✅ Phase 1 — monorepo + full Tailwind migration
 - ✅ Phase 2 — DB schema + RLS + DummyJSON seed
 - ✅ Phase 3 — frontend ↔ Supabase (auth, products-from-DB, DB cart, wishlist)
 - ✅ Phase 4 — Express order-finalize endpoint (`POST /api/orders`)
-- ⏳ Phase 5 — Stripe Checkout
+- ✅ Phase 5 — Stripe Checkout (session + webhook + verify; add keys to enable)
