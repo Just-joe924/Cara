@@ -12,6 +12,23 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Surface startup crashes (e.g. missing env vars) instead of a blank page. -->
+    <script>
+      window.addEventListener('error', function (e) {
+        var root = document.getElementById('root')
+        if (root && !root.hasChildNodes()) {
+          root.innerHTML =
+            '<div style="font-family:sans-serif;max-width:640px;margin:80px auto;padding:24px;text-align:center;color:#222">' +
+            '<h1 style="color:#088178;margin:0 0 12px">App failed to start</h1>' +
+            '<p style="margin:0 0 12px">' +
+            ((e && e.message) || 'A startup error occurred.') +
+            '</p>' +
+            '<p style="color:#666;font-size:14px;margin:0">Open the browser console for details. If this mentions Supabase env, set ' +
+            '<code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in your host and redeploy.</p>' +
+            '</div>'
+        }
+      })
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
