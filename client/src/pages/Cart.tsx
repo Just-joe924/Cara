@@ -45,12 +45,12 @@ export default function Cart() {
               </tr>
             ) : (
               items.map((item) => (
-                <tr key={item.product.id} className="text-center text-[13px] text-muted">
+                <tr key={`${item.product.id}__${item.size}`} className="text-center text-[13px] text-muted">
                   <td className="pt-[15px]">
                     <button
                       className="text-base text-[#888] hover:text-accent"
                       aria-label={`Remove ${item.product.name}`}
-                      onClick={() => removeFromCart(item.product.id)}
+                      onClick={() => removeFromCart(item.product.id, item.size)}
                     >
                       <i className="fa-regular fa-circle-xmark"></i>
                     </button>
@@ -58,14 +58,17 @@ export default function Cart() {
                   <td className="pt-[15px]">
                     <img className="mx-auto w-[70px]" src={item.product.image_url ?? ''} alt={item.product.name} />
                   </td>
-                  <td className="pt-[15px]">{item.product.name}</td>
+                  <td className="pt-[15px]">
+                    {item.product.name}
+                    {item.size && <span className="block text-xs text-muted-2">{item.size}</span>}
+                  </td>
                   <td className="pt-[15px]">${item.product.price.toFixed(2)}</td>
                   <td className="pt-[15px]">
                     <input
                       type="number"
                       min={1}
                       value={item.quantity}
-                      onChange={(e) => setQuantity(item.product.id, Number(e.target.value))}
+                      onChange={(e) => setQuantity(item.product.id, item.size, Number(e.target.value))}
                       className="w-[70px] rounded border border-[#e1e1e1] py-2.5 pl-3.5 pr-1.5 text-center"
                     />
                   </td>

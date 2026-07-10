@@ -217,11 +217,14 @@ export default function Checkout() {
           <h3 className="mb-4 text-lg font-semibold">Order Summary</h3>
           <ul className="mb-4">
             {items.map((item) => (
-              <li key={item.product.id} className="flex items-center gap-3 border-b border-[#f0f0f0] py-2.5">
+              <li key={`${item.product.id}__${item.size}`} className="flex items-center gap-3 border-b border-[#f0f0f0] py-2.5">
                 <img className="h-[50px] w-[50px] rounded-md object-cover" src={item.product.image_url ?? ''} alt={item.product.name} />
                 <div className="flex flex-1 flex-col">
                   <span className="text-[13px] font-semibold text-ink">{item.product.name}</span>
-                  <span className="text-xs text-muted-2">Qty: {item.quantity}</span>
+                  <span className="text-xs text-muted-2">
+                    Qty: {item.quantity}
+                    {item.size && ` · ${item.size}`}
+                  </span>
                 </div>
                 <span className="text-[13px] font-bold text-primary">
                   ${(item.product.price * item.quantity).toFixed(2)}

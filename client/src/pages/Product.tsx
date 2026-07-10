@@ -19,6 +19,7 @@ export default function Product() {
   const [related, setRelated] = useState<ProductType[]>([])
   const [loading, setLoading] = useState(true)
   const [size, setSize] = useState('')
+  const [sizeError, setSizeError] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [added, setAdded] = useState(false)
 
@@ -67,7 +68,11 @@ export default function Product() {
 
   function handleAddToCart() {
     if (!product || outOfStock) return
-    addToCart(product, quantity)
+    if (product.sizes.length > 0 && !size) {
+      setSizeError('Please select a size.')
+      return
+    }
+    addToCart(product, quantity, size)
     setAdded(true)
   }
 
@@ -95,17 +100,35 @@ export default function Product() {
             {outOfStock ? 'Out of stock' : `In stock (${product.stock} available)`}
           </p>
 
-          <select
-            value={size}
-            onChange={(e) => setSize(e.target.value)}
-            className="mb-2.5 mt-4 block rounded border border-[#e1e1e1] px-2.5 py-1.5 outline-none"
-          >
-            <option value="">Select Size</option>
-            <option value="S">Small</option>
-            <option value="L">Large</option>
-            <option value="XL">XL</option>
-            <option value="XXL">XXL</option>
-          </select>
+          {product.sizes.length > 0 && (
+            <div className="mb-4 mt-4">
+              <p className="mb-2 text-sm font-semibold text-muted">Select Size</p>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((s) => {
+                  const labelText = s.uk ? `US ${s.us} · UK ${s.uk}` : `US ${s.us}`
+                  return (
+                    <button
+                      key={labelText}
+                      type="button"
+                      onClick={() => {
+                        setSize(labelText)
+                        setSizeError('')
+                        setAdded(false)
+                      }}
+                      className={`rounded border px-3 py-2 text-sm transition ${
+                        size === labelText
+                          ? 'border-primary bg-primary text-white'
+                          : 'border-[#e1e1e1] text-ink hover:border-primary'
+                      }`}
+                    >
+                      {labelText}
+                    </button>
+                  )
+                })}
+              </div>
+              {sizeError && <p className="mt-1 text-xs text-accent">{sizeError}</p>}
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-2.5">
             <input

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import type { Category, Product } from '../../types'
+import type { Category, Product, ProductSize } from '../../types'
 import {
   addProductImages,
   createProduct,
@@ -38,6 +38,7 @@ export default function ProductForm({
   const [description, setDescription] = useState(product?.description ?? '')
   const [isActive, setIsActive] = useState(product?.is_active ?? true)
   const [images, setImages] = useState<string[]>(product?.image_url ? [product.image_url] : [])
+  const [sizes, setSizes] = useState<ProductSize[]>(product?.sizes ?? [])
 
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -62,6 +63,16 @@ export default function ProductForm({
 
   function removeImage(url: string) {
     setImages((prev) => prev.filter((u) => u !== url))
+  }
+
+  function addSize() {
+    setSizes((prev) => [...prev, { us: '', uk: '' }])
+  }
+  function updateSize(i: number, field: 'us' | 'uk', val: string) {
+    setSizes((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)))
+  }
+  function removeSize(i: number) {
+    setSizes((prev) => prev.filter((_, idx) => idx !== i))
   }
 
   async function handleGenerate() {
@@ -97,6 +108,9 @@ export default function ProductForm({
     setSaving(true)
     setError('')
     try {
+      const cleanSizes = sizes
+        .map((s) => ({ us: s.us.trim(), uk: s.uk?.trim() || null }))
+        .filter((s) => s.us)
       const payload = {
         name: name.trim(),
         description: description.trim() || null,
@@ -105,6 +119,7 @@ export default function ProductForm({
         category_id: categoryId || null,
         image_url: images[0] ?? null,
         is_active: isActive,
+        sizes: cleanSizes,
       }
       if (isEdit && product) {
         await updateProduct(product.id, payload)
@@ -177,6 +192,26 @@ export default function ProductForm({
           <label className={label}>Stock</label>
           <input type="number" min={0} className="form-input" value={stock} onChange={(e) => setStock(e.target.value)} />
         </div>
+      </div>
+
+      {/* Sizes */}
+      <label className={label}>Sizes (optional)</label>
+      <p className="mb-2 text-xs text-muted-2">
+        Add US sizes; UK is optional. Leave empty if this product has no sizes.
+      </p>
+      <div className="mb-4 space-y-2">
+        {sizes.map((s, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input className="form-input" placeholder="US (e.g. M or 9)" value={s.us} onChange={(e) => updateSize(i, 'us', e.target.value)} />
+            <input className="form-input" placeholder="UK (e.g. 12 or 8)" value={s.uk ?? ''} onChange={(e) => updateSize(i, 'uk', e.target.value)} />
+            <button type="button" onClick={() => removeSize(i)} className="px-2 text-lg text-accent" aria-label="Remove size">
+              ×
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={addSize} className="text-sm font-semibold text-primary">
+          <i className="fa-solid fa-plus mr-1"></i> Add size
+        </button>
       </div>
 
       {/* Description helper */}

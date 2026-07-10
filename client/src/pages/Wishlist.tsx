@@ -46,7 +46,11 @@ export default function Wishlist() {
                   <button
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-primary-border bg-primary-soft text-primary transition hover:bg-primary hover:text-white"
                     aria-label="Add to cart"
-                    onClick={() => addToCart(product)}
+                    onClick={() =>
+                      product.sizes?.length
+                        ? navigate(`/product/${product.slug}`)
+                        : addToCart(product, 1, '')
+                    }
                   >
                     <i className="fas fa-shopping-cart"></i>
                   </button>

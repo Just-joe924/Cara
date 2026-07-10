@@ -15,7 +15,12 @@ export default function ProductCard({ product }: { product: Product }) {
 
   function handleAddToCart(e: MouseEvent) {
     e.stopPropagation()
-    addToCart(product)
+    // Products with sizes need a size chosen — send the buyer to the detail page.
+    if (product.sizes && product.sizes.length > 0) {
+      navigate(`/product/${product.slug}`)
+      return
+    }
+    addToCart(product, 1, '')
   }
 
   function handleWishlist(e: MouseEvent) {
