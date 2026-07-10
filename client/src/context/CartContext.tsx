@@ -15,9 +15,9 @@ interface CartContextValue {
   totalQuantity: number
   subtotal: number
   loading: boolean
-  addToCart: (product: Product, quantity?: number) => Promise<void>
-  removeFromCart: (productId: string) => Promise<void>
-  setQuantity: (productId: string, quantity: number) => Promise<void>
+  addToCart: (product: Product, quantity?: number, size?: string) => Promise<void>
+  removeFromCart: (productId: string, size: string) => Promise<void>
+  setQuantity: (productId: string, size: string, quantity: number) => Promise<void>
   clearCart: () => Promise<void>
 }
 
@@ -25,12 +25,16 @@ const CartContext = createContext<CartContextValue | undefined>(undefined)
 
 const GUEST_KEY = 'cara-cart-guest'
 
+/** A cart line is identified by product + chosen size. */
+const lineKey = (productId: string, size: string) => `${productId}__${size}`
+
 function loadGuest(): CartItem[] {
   try {
     const raw = localStorage.getItem(GUEST_KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw) as CartItem[]
-    return Array.isArray(parsed) ? parsed : []
+    // Backfill size for carts saved before sizes existed.
+    return Array.isArray(parsed) ? parsed.map((i) => ({ ...i, size: i.size ?? '' })) : []
   } catch {
     return []
   }
@@ -44,8 +48,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Load the cart for the current identity. When a guest signs in, their
-  // local cart is merged into the database cart, then cleared locally.
+  // Load the cart for the current identity. When a guest signs in, their local
+  // cart is merged into the database cart (per product+size), then cleared.
   useEffect(() => {
     let active = true
     const userId = user?.id ?? null
@@ -67,18 +71,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // Merge guest cart into DB cart (sum quantities per product).
       const merged = new Map<string, CartItem>()
-      for (const it of dbItems) merged.set(it.product.id, it)
+      for (const it of dbItems) merged.set(lineKey(it.product.id, it.size), it)
       for (const g of guest) {
-        const existing = merged.get(g.product.id)
-        merged.set(g.product.id, {
+        const key = lineKey(g.product.id, g.size)
+        const existing = merged.get(key)
+        merged.set(key, {
           product: existing?.product ?? g.product,
+          size: g.size,
           quantity: (existing?.quantity ?? 0) + g.quantity,
         })
       }
       await Promise.all(
-        [...merged.values()].map((it) => setCartItem(userId, it.product.id, it.quantity)),
+        [...merged.values()].map((it) => setCartItem(userId, it.product.id, it.size, it.quantity)),
       )
       clearGuest()
       if (active) setItems([...merged.values()])
@@ -95,34 +100,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id])
 
-  async function addToCart(product: Product, quantity = 1) {
-    const existing = items.find((i) => i.product.id === product.id)
+  async function addToCart(product: Product, quantity = 1, size = '') {
+    const existing = items.find((i) => i.product.id === product.id && i.size === size)
     const newQty = (existing?.quantity ?? 0) + quantity
-    if (user) await setCartItem(user.id, product.id, newQty)
+    if (user) await setCartItem(user.id, product.id, size, newQty)
     setItems((prev) => {
-      const found = prev.some((i) => i.product.id === product.id)
+      const found = prev.some((i) => i.product.id === product.id && i.size === size)
       const next = found
-        ? prev.map((i) => (i.product.id === product.id ? { ...i, quantity: newQty } : i))
-        : [...prev, { product, quantity: newQty }]
+        ? prev.map((i) =>
+            i.product.id === product.id && i.size === size ? { ...i, quantity: newQty } : i,
+          )
+        : [...prev, { product, quantity: newQty, size }]
       if (!user) saveGuest(next)
       return next
     })
   }
 
-  async function setQuantity(productId: string, quantity: number) {
+  async function setQuantity(productId: string, size: string, quantity: number) {
     const safe = Math.max(1, Math.floor(quantity) || 1)
-    if (user) await setCartItem(user.id, productId, safe)
+    if (user) await setCartItem(user.id, productId, size, safe)
     setItems((prev) => {
-      const next = prev.map((i) => (i.product.id === productId ? { ...i, quantity: safe } : i))
+      const next = prev.map((i) =>
+        i.product.id === productId && i.size === size ? { ...i, quantity: safe } : i,
+      )
       if (!user) saveGuest(next)
       return next
     })
   }
 
-  async function removeFromCart(productId: string) {
-    if (user) await removeCartItem(user.id, productId)
+  async function removeFromCart(productId: string, size: string) {
+    if (user) await removeCartItem(user.id, productId, size)
     setItems((prev) => {
-      const next = prev.filter((i) => i.product.id !== productId)
+      const next = prev.filter((i) => !(i.product.id === productId && i.size === size))
       if (!user) saveGuest(next)
       return next
     })

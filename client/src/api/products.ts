@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase'
-import type { Category, Product } from '../types'
+import type { Category, Product, ProductSize } from '../types'
 
 const PRODUCT_SELECT = '*, categories(name, slug), sellers(id, brand_name, business_name)'
 
@@ -66,6 +66,7 @@ export interface ProductInput {
   category_id: string | null
   image_url: string | null
   is_active: boolean
+  sizes: ProductSize[]
 }
 
 function slugify(input: string): string {

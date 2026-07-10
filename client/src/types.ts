@@ -26,6 +26,12 @@ export interface ProductImage {
   created_at: string
 }
 
+/** A size option offered by a seller (UK is optional). */
+export interface ProductSize {
+  us: string
+  uk?: string | null
+}
+
 export interface Product {
   id: string
   category_id: string | null
@@ -37,6 +43,7 @@ export interface Product {
   stock: number
   image_url: string | null
   is_active: boolean
+  sizes: ProductSize[]
   created_at: string
   /** Joined category (when the query selects `categories(name, slug)`). */
   categories?: Pick<Category, 'name' | 'slug'> | null
@@ -49,6 +56,8 @@ export interface Product {
 export interface CartItem {
   product: Product
   quantity: number
+  /** Selected size label (e.g. "US M · UK 12"); '' when the product has no sizes. */
+  size: string
 }
 
 export interface Profile {
@@ -65,6 +74,8 @@ export interface OrderItem {
   product_id: string | null
   quantity: number
   price_at_purchase: number
+  size?: string
+  status?: string
   products?: Pick<Product, 'name' | 'image_url' | 'slug'> | null
 }
 
