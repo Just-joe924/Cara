@@ -35,30 +35,33 @@ function composeTemplate(input: DescribeInput): string {
 
   const sentences: string[] = []
 
+  // 1. Intro
   sentences.push(brand ? `Meet the ${name} by ${brand}.` : `Meet the ${name}.`)
 
-  const descriptor = [condition, category].filter(Boolean).join(' ')
-  if (descriptor) {
-    sentences.push(
-      `${capitalize(articleFor(descriptor))} ${descriptor} crafted to bring quality and style to your everyday.`,
-    )
+  // 2. Condition-led body — avoids putting an article before a possibly-plural
+  //    category (no more "A brand-new tops").
+  if (condition) {
+    sentences.push(`${capitalize(condition)} and thoughtfully made, it brings quality and style to your everyday.`)
   } else {
-    sentences.push('Thoughtfully made to bring quality and style to your everyday.')
+    sentences.push('Thoughtfully made, it brings quality and style to your everyday.')
   }
 
+  // 3. Category, phrased so number/plurality never matters.
+  if (category) {
+    sentences.push(`Part of our ${category} lineup.`)
+  }
+
+  // 4. Features
   if (featureList.length) {
     sentences.push(`Highlights include ${joinWithAnd(featureList)}.`)
   }
 
+  // 5. Price / CTA
   sentences.push(
     price ? `Yours for $${price.toFixed(2)} — add it to your cart today.` : 'Add it to your cart today.',
   )
 
   return sentences.join(' ')
-}
-
-function articleFor(word: string): 'a' | 'an' {
-  return /^[aeiou]/i.test(word.trim()) ? 'an' : 'a'
 }
 
 function capitalize(s: string): string {
