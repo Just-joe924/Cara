@@ -16,6 +16,7 @@ import Account from './pages/Account'
 import Wishlist from './pages/Wishlist'
 import SellerOnboarding from './pages/SellerOnboarding'
 import SellerDashboard from './pages/SellerDashboard'
+import SellerOrders from './pages/SellerOrders'
 import SellerStorefront from './pages/SellerStorefront'
 import NotFound from './pages/NotFound'
 
@@ -44,6 +45,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <SellerOnboarding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller/orders"
+          element={
+            <ProtectedRoute>
+              <SellerOrders />
             </ProtectedRoute>
           }
         />

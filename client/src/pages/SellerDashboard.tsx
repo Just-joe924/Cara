@@ -81,6 +81,10 @@ export default function SellerDashboard() {
             <h2 className="text-2xl font-semibold text-ink">Your Products</h2>
             <p className="text-sm text-muted">
               {products.length} product{products.length === 1 ? '' : 's'} ·{' '}
+              <Link to="/seller/orders" className="font-semibold text-primary">
+                Orders
+              </Link>{' '}
+              ·{' '}
               <Link to={`/store/${seller.id}`} className="font-semibold text-primary">
                 View your storefront
               </Link>
