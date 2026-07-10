@@ -14,6 +14,9 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Account from './pages/Account'
 import Wishlist from './pages/Wishlist'
+import SellerOnboarding from './pages/SellerOnboarding'
+import SellerDashboard from './pages/SellerDashboard'
+import SellerStorefront from './pages/SellerStorefront'
 import NotFound from './pages/NotFound'
 
 export default function App() {
@@ -27,6 +30,23 @@ export default function App() {
         <Route path="/blog" element={<Blog />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/store/:id" element={<SellerStorefront />} />
+        <Route
+          path="/seller"
+          element={
+            <ProtectedRoute>
+              <SellerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller/onboarding"
+          element={
+            <ProtectedRoute>
+              <SellerOnboarding />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route

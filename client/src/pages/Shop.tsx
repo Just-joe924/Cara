@@ -44,7 +44,8 @@ export default function Shop() {
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
     const filtered = products.filter((p) => {
-      const matchesQuery = !q || p.name.toLowerCase().includes(q)
+      const brand = `${p.sellers?.brand_name ?? ''} ${p.sellers?.business_name ?? ''}`.toLowerCase()
+      const matchesQuery = !q || p.name.toLowerCase().includes(q) || brand.includes(q)
       const matchesCategory = category === 'all' || p.categories?.slug === category
       return matchesQuery && matchesCategory
     })
@@ -87,7 +88,7 @@ export default function Shop() {
           <i className="fa-solid fa-magnifying-glass text-primary"></i>
           <input
             type="search"
-            placeholder="Search products..."
+            placeholder="Search products or brands..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-label="Search products"
