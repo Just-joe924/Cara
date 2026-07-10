@@ -32,9 +32,13 @@ security definer
 set search_path = public
 as $$
 begin
-  update public.profiles
-    set role = 'seller'
-    where id = new.user_id and role <> 'admin';
+  begin
+    update public.profiles
+      set role = 'seller'
+      where id = new.user_id and role <> 'admin';
+  exception when others then
+    null; -- role is informational; seller-ness derives from the sellers row
+  end;
   return new;
 end;
 $$;
