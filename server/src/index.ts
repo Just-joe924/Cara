@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import { env } from './lib/env.js'
 import { ordersRouter } from './routes/orders.js'
+import { productsRouter } from './routes/products.js'
 import { stripeRouter, stripeWebhookHandler } from './routes/stripe.js'
 
 const app = express()
@@ -19,6 +20,7 @@ app.get('/health', (_req, res) => {
 })
 
 app.use('/api/orders', ordersRouter)
+app.use('/api/products', productsRouter)
 app.use('/api', stripeRouter)
 
 // Fallback 404 for unknown API routes.
