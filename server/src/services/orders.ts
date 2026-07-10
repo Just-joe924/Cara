@@ -3,6 +3,7 @@ import { supabaseAdmin } from '../lib/supabaseAdmin.js'
 export interface OrderLine {
   product: { id: string; name: string; price: number; stock: number; image_url: string | null }
   quantity: number
+  size: string
 }
 
 /** Typed error carrying an HTTP status + optional payload for the response. */
@@ -20,15 +21,19 @@ export class OrderError extends Error {
 export async function loadCartLines(userId: string): Promise<OrderLine[]> {
   const { data, error } = await supabaseAdmin
     .from('cart_items')
-    .select('quantity, products(id, name, price, stock, image_url)')
+    .select('quantity, size, products(id, name, price, stock, image_url)')
     .eq('user_id', userId)
 
   if (error) throw new OrderError(500, error.message)
 
-  const rows = (data ?? []) as unknown as { quantity: number; products: OrderLine['product'] | null }[]
+  const rows = (data ?? []) as unknown as {
+    quantity: number
+    size: string | null
+    products: OrderLine['product'] | null
+  }[]
   const lines = rows
-    .filter((r): r is { quantity: number; products: OrderLine['product'] } => r.products !== null)
-    .map((r) => ({ product: r.products, quantity: r.quantity }))
+    .filter((r): r is { quantity: number; size: string | null; products: OrderLine['product'] } => r.products !== null)
+    .map((r) => ({ product: r.products, quantity: r.quantity, size: r.size ?? '' }))
 
   if (lines.length === 0) throw new OrderError(400, 'Cart is empty')
   return lines
@@ -71,6 +76,7 @@ export async function createOrderWithItems(
     product_id: l.product.id,
     quantity: l.quantity,
     price_at_purchase: l.product.price,
+    size: l.size,
   }))
 
   const { error: itemsErr } = await supabaseAdmin.from('order_items').insert(orderItems)
