@@ -18,11 +18,34 @@ import SellerOnboarding from './pages/SellerOnboarding'
 import SellerDashboard from './pages/SellerDashboard'
 import SellerOrders from './pages/SellerOrders'
 import SellerStorefront from './pages/SellerStorefront'
+import AdminRoute from './components/AdminRoute'
+import AdminLogin from './pages/admin/AdminLogin'
+import AdminLayout from './pages/admin/AdminLayout'
+import Overview from './pages/admin/Overview'
+import Users from './pages/admin/Users'
+import AdminProducts from './pages/admin/Products'
+import AdminOrders from './pages/admin/Orders'
 import NotFound from './pages/NotFound'
 
 export default function App() {
   return (
     <Routes>
+      {/* Admin — deliberately outside the storefront Layout and unlinked from the UI. */}
+      <Route path="/admin-login" element={<AdminLogin />} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminLayout />
+          </AdminRoute>
+        }
+      >
+        <Route index element={<Overview />} />
+        <Route path="users" element={<Users />} />
+        <Route path="products" element={<AdminProducts />} />
+        <Route path="orders" element={<AdminOrders />} />
+      </Route>
+
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
