@@ -4,6 +4,7 @@ import { env } from './lib/env.js'
 import { ordersRouter } from './routes/orders.js'
 import { productsRouter } from './routes/products.js'
 import { sellerRouter } from './routes/seller.js'
+import { adminRouter } from './routes/admin.js'
 import { stripeRouter, stripeWebhookHandler } from './routes/stripe.js'
 
 const app = express()
@@ -23,6 +24,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/orders', ordersRouter)
 app.use('/api/products', productsRouter)
 app.use('/api/seller', sellerRouter)
+app.use('/api/admin', adminRouter)
 app.use('/api', stripeRouter)
 
 // Fallback 404 for unknown API routes.
