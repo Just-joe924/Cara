@@ -9,7 +9,7 @@ update public.profiles p
 set role = 'admin'
 from auth.users u
 where u.id = p.id
-  and u.email = 'theoreoluwajohnson@gmail.com';
+  and u.email = 'oreemma01@gmail.com';
 
 -- Speeds up the role lookups the admin middleware performs on every request.
 create index if not exists idx_profiles_role on public.profiles (role);
