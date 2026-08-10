@@ -2,11 +2,19 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchOrders } from '../api/orders'
+import OrderTracker from '../components/OrderTracker'
 import type { Order } from '../types'
 
 const statusColor: Record<string, string> = {
   pending: 'bg-[#fff2e5] text-[#b26a00]',
   paid: 'bg-primary-soft text-primary',
+  shipped: 'bg-[#d1e8f2] text-[#1d6f8b]',
+  delivered: 'bg-[#cdebbc] text-[#3d7a1f]',
+  cancelled: 'bg-[#fdecec] text-accent',
+}
+
+const itemStatusColor: Record<string, string> = {
+  processing: 'bg-[#fff2e5] text-[#b26a00]',
   shipped: 'bg-[#d1e8f2] text-[#1d6f8b]',
   delivered: 'bg-[#cdebbc] text-[#3d7a1f]',
   cancelled: 'bg-[#fdecec] text-accent',
@@ -97,7 +105,7 @@ export default function Account() {
                       {order.status}
                     </span>
                   </div>
-                  <ul className="mb-3 divide-y divide-[#f0f0f0]">
+                  <ul className="mb-4 divide-y divide-[#f0f0f0]">
                     {(order.order_items ?? []).map((item) => (
                       <li key={item.id} className="flex items-center gap-3 py-2">
                         {item.products?.image_url && (
@@ -107,7 +115,17 @@ export default function Account() {
                             className="h-10 w-10 rounded object-cover"
                           />
                         )}
-                        <span className="flex-1 text-sm">{item.products?.name ?? 'Product'}</span>
+                        <div className="flex-1">
+                          <span className="text-sm">{item.products?.name ?? 'Product'}</span>
+                          {item.size && <span className="block text-xs text-muted-2">{item.size}</span>}
+                        </div>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                            itemStatusColor[item.status ?? 'processing'] ?? 'bg-header text-ink'
+                          }`}
+                        >
+                          {item.status ?? 'processing'}
+                        </span>
                         <span className="text-xs text-muted-2">×{item.quantity}</span>
                         <span className="text-sm font-semibold text-primary">
                           ${item.price_at_purchase.toFixed(2)}
@@ -115,6 +133,11 @@ export default function Account() {
                       </li>
                     ))}
                   </ul>
+
+                  <div className="mb-4 rounded-lg bg-[#fafbfc] px-4 py-4">
+                    <OrderTracker items={order.order_items ?? []} />
+                  </div>
+
                   <div className="text-right text-sm font-bold text-ink">
                     Total: ${order.total_amount.toFixed(2)}
                   </div>
