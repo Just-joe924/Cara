@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '../lib/supabaseAdmin.js'
+import { sendOrderConfirmation } from '../lib/email.js'
 
 export interface OrderLine {
   product: { id: string; name: string; price: number; stock: number; image_url: string | null }
@@ -142,5 +143,6 @@ export async function markOrderPaid(orderId: string): Promise<'fulfilled' | 'alr
 
   await supabaseAdmin.from('orders').update({ status: 'paid' }).eq('id', orderId)
   await clearCart(order.user_id)
+  await sendOrderConfirmation(orderId)
   return 'fulfilled'
 }

@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { supabaseAdmin } from '../lib/supabaseAdmin.js'
+import { sendItemStatusEmail } from '../lib/email.js'
 
 export const sellerRouter = Router()
 
@@ -79,19 +80,25 @@ sellerRouter.patch('/orders/items/:id', requireAuth, async (req: Request, res: R
   // Confirm this line item belongs to one of the seller's products.
   const { data: item } = await supabaseAdmin
     .from('order_items')
-    .select('id, products(seller_id)')
+    .select('id, status, products(seller_id)')
     .eq('id', req.params.id)
     .maybeSingle()
   const owner = (item as any)?.products?.seller_id
   if (!item || owner !== sellerId) {
     return res.status(404).json({ error: 'Order item not found' })
   }
+  const prevStatus = (item as any).status as string
 
   const { error } = await supabaseAdmin
     .from('order_items')
     .update({ status })
     .eq('id', req.params.id)
   if (error) return res.status(500).json({ error: error.message })
+
+  // Notify the buyer on a real transition into shipped/delivered (best-effort).
+  if (status !== prevStatus) {
+    await sendItemStatusEmail(req.params.id, status)
+  }
 
   return res.json({ id: req.params.id, status })
 })
