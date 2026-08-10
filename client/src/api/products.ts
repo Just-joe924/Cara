@@ -1,7 +1,16 @@
 import { supabase } from '../lib/supabase'
+import { fetchRatings } from './reviews'
 import type { Category, Product, ProductSize } from '../types'
 
 const PRODUCT_SELECT = '*, categories(name, slug), sellers(id, brand_name, business_name)'
+
+/** Attach aggregate ratings (from the product_ratings view) to a set of products. */
+async function withRatings(products: Product[]): Promise<Product[]> {
+  if (products.length === 0) return products
+  const ratings = await fetchRatings(products.map((p) => p.id))
+  for (const p of products) p.rating = ratings.get(p.id)
+  return products
+}
 
 export async function listProducts(): Promise<Product[]> {
   const { data, error } = await supabase
@@ -10,7 +19,7 @@ export async function listProducts(): Promise<Product[]> {
     .eq('is_active', true)
     .order('created_at', { ascending: false })
   if (error) throw error
-  return (data ?? []) as Product[]
+  return withRatings((data ?? []) as Product[])
 }
 
 export async function listNewest(limit: number): Promise<Product[]> {
@@ -21,7 +30,7 @@ export async function listNewest(limit: number): Promise<Product[]> {
     .order('created_at', { ascending: false })
     .limit(limit)
   if (error) throw error
-  return (data ?? []) as Product[]
+  return withRatings((data ?? []) as Product[])
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -31,7 +40,9 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     .eq('slug', slug)
     .maybeSingle()
   if (error) throw error
-  return (data as Product) ?? null
+  if (!data) return null
+  const [product] = await withRatings([data as Product])
+  return product
 }
 
 export async function listRelated(excludeId: string, limit: number): Promise<Product[]> {
@@ -42,7 +53,7 @@ export async function listRelated(excludeId: string, limit: number): Promise<Pro
     .neq('id', excludeId)
     .limit(limit)
   if (error) throw error
-  return (data ?? []) as Product[]
+  return withRatings((data ?? []) as Product[])
 }
 
 export async function listCategories(): Promise<Category[]> {

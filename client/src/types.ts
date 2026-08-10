@@ -32,6 +32,23 @@ export interface ProductSize {
   uk?: string | null
 }
 
+/** Aggregate rating for a product (from the `product_ratings` view). */
+export interface ProductRating {
+  average: number
+  count: number
+}
+
+export interface Review {
+  id: string
+  product_id: string
+  user_id: string
+  author_name: string | null
+  rating: number
+  comment: string | null
+  verified: boolean
+  created_at: string
+}
+
 export interface Product {
   id: string
   category_id: string | null
@@ -45,6 +62,8 @@ export interface Product {
   is_active: boolean
   sizes: ProductSize[]
   created_at: string
+  /** Aggregate rating, attached by the products API layer when available. */
+  rating?: ProductRating
   /** Joined category (when the query selects `categories(name, slug)`). */
   categories?: Pick<Category, 'name' | 'slug'> | null
   /** Joined seller (when the query selects `sellers(...)`). */
