@@ -4,6 +4,7 @@ import type { Product } from '../types'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
+import StarRating from './StarRating'
 
 export default function ProductCard({ product }: { product: Product }) {
   const navigate = useNavigate()
@@ -51,6 +52,12 @@ export default function ProductCard({ product }: { product: Product }) {
       <div className="py-2.5 text-start">
         <span className="text-xs text-muted-2">{product.categories?.name ?? ''}</span>
         <h5 className="line-clamp-1 pt-[7px] text-sm text-[#1a1a1a]">{product.name}</h5>
+        {product.rating && product.rating.count > 0 && (
+          <div className="flex items-center gap-1 pt-[7px]">
+            <StarRating value={product.rating.average} sizeClass="text-[11px]" />
+            <span className="text-[11px] text-muted-2">({product.rating.count})</span>
+          </div>
+        )}
         <h4 className="pt-[7px] text-[15px] font-bold text-primary">${product.price}</h4>
       </div>
       <button

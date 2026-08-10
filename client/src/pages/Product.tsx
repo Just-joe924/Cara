@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Newsletter from '../components/Newsletter'
 import ProductCard from '../components/ProductCard'
+import StarRating from '../components/StarRating'
+import ReviewsSection from '../components/ReviewsSection'
 import { getProductBySlug, listRelated } from '../api/products'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -94,7 +96,16 @@ export default function Product() {
 
         <div className="w-full pt-2 md:w-1/2">
           <h6 className="text-sm text-muted">Home / {product.categories?.name ?? 'Shop'}</h6>
-          <h4 className="pb-5 pt-2 text-2xl font-semibold text-ink">{product.name}</h4>
+          <h4 className="pb-2 pt-2 text-2xl font-semibold text-ink">{product.name}</h4>
+          {product.rating && product.rating.count > 0 && (
+            <a href="#reviews" className="mb-3 flex items-center gap-2 text-sm">
+              <StarRating value={product.rating.average} />
+              <span className="text-muted">
+                {product.rating.average.toFixed(1)} ({product.rating.count} review
+                {product.rating.count === 1 ? '' : 's'})
+              </span>
+            </a>
+          )}
           <h2 className="text-[26px] font-semibold text-ink">${product.price}</h2>
           <p className={`mt-2 text-sm font-semibold ${outOfStock ? 'text-accent' : 'text-primary'}`}>
             {outOfStock ? 'Out of stock' : `In stock (${product.stock} available)`}
@@ -162,6 +173,10 @@ export default function Product() {
           <span className="leading-relaxed text-muted">{product.description}</span>
         </div>
       </section>
+
+      <div id="reviews" className="scroll-mt-24">
+        <ReviewsSection productId={product.id} />
+      </div>
 
       {related.length > 0 && (
         <section className="section-x text-center">
