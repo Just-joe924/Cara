@@ -3,6 +3,8 @@ import { fetchRatings } from './reviews'
 import type { Category, Product, ProductSize } from '../types'
 
 const PRODUCT_SELECT = '*, categories(name, slug), sellers(id, brand_name, business_name)'
+// Detail/edit view additionally pulls the full image gallery.
+const PRODUCT_DETAIL_SELECT = `${PRODUCT_SELECT}, product_images(id, product_id, url, position, created_at)`
 
 /** Attach aggregate ratings (from the product_ratings view) to a set of products. */
 async function withRatings(products: Product[]): Promise<Product[]> {
@@ -36,7 +38,7 @@ export async function listNewest(limit: number): Promise<Product[]> {
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   const { data, error } = await supabase
     .from('products')
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_DETAIL_SELECT)
     .eq('slug', slug)
     .maybeSingle()
   if (error) throw error
@@ -88,11 +90,11 @@ function slugify(input: string): string {
     .replace(/(^-|-$)/g, '')
 }
 
-/** All of a seller's products (including inactive drafts). */
+/** All of a seller's products (including inactive drafts) with their galleries. */
 export async function listMyProducts(sellerId: string): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
-    .select(PRODUCT_SELECT)
+    .select(PRODUCT_DETAIL_SELECT)
     .eq('seller_id', sellerId)
     .order('created_at', { ascending: false })
   if (error) throw error
@@ -149,4 +151,14 @@ export async function addProductImages(productId: string, urls: string[]): Promi
   const rows = urls.map((url, i) => ({ product_id: productId, url, position: i }))
   const { error } = await supabase.from('product_images').insert(rows)
   if (error) throw error
+}
+
+/**
+ * Replace a product's gallery (the images beyond the main `image_url`). Clears
+ * the existing rows and reinserts in order — used when editing a product.
+ */
+export async function replaceProductImages(productId: string, urls: string[]): Promise<void> {
+  const { error } = await supabase.from('product_images').delete().eq('product_id', productId)
+  if (error) throw error
+  await addProductImages(productId, urls)
 }

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import Newsletter from '../components/Newsletter'
 import ProductCard from '../components/ProductCard'
+import ImageGallery from '../components/ImageGallery'
 import StarRating from '../components/StarRating'
 import ReviewsSection from '../components/ReviewsSection'
 import { getProductBySlug, listRelated } from '../api/products'
@@ -44,6 +45,17 @@ export default function Product() {
       active = false
     }
   }, [slug])
+
+  // Full gallery: the main image first, then the extra product_images (ordered),
+  // de-duplicated so the cover never appears twice.
+  const gallery = useMemo(() => {
+    const urls: string[] = []
+    if (product?.image_url) urls.push(product.image_url)
+    for (const img of [...(product?.product_images ?? [])].sort((a, b) => a.position - b.position)) {
+      if (!urls.includes(img.url)) urls.push(img.url)
+    }
+    return urls
+  }, [product])
 
   if (loading) {
     return (
@@ -91,7 +103,7 @@ export default function Product() {
     <>
       <section className="section-x flex flex-col gap-10 md:flex-row">
         <div className="w-full md:w-2/5">
-          <img className="w-full rounded-lg" src={product.image_url ?? ''} alt={product.name} />
+          <ImageGallery images={gallery} alt={product.name} />
         </div>
 
         <div className="w-full pt-2 md:w-1/2">
