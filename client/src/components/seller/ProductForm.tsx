@@ -3,6 +3,7 @@ import type { Category, Product, ProductSize } from '../../types'
 import {
   addProductImages,
   createProduct,
+  replaceProductImages,
   updateProduct,
   uploadProductImage,
 } from '../../api/products'
@@ -37,7 +38,16 @@ export default function ProductForm({
   const [features, setFeatures] = useState('')
   const [description, setDescription] = useState(product?.description ?? '')
   const [isActive, setIsActive] = useState(product?.is_active ?? true)
-  const [images, setImages] = useState<string[]>(product?.image_url ? [product.image_url] : [])
+  // In edit mode, seed the gallery with the main image + all product_images
+  // (ordered), de-duplicated. First entry is always the cover.
+  const [images, setImages] = useState<string[]>(() => {
+    if (!product) return []
+    const urls = product.image_url ? [product.image_url] : []
+    for (const img of [...(product.product_images ?? [])].sort((a, b) => a.position - b.position)) {
+      if (!urls.includes(img.url)) urls.push(img.url)
+    }
+    return urls
+  })
   const [sizes, setSizes] = useState<ProductSize[]>(product?.sizes ?? [])
 
   const [uploading, setUploading] = useState(false)
@@ -63,6 +73,11 @@ export default function ProductForm({
 
   function removeImage(url: string) {
     setImages((prev) => prev.filter((u) => u !== url))
+  }
+
+  /** Promote an image to the cover (first position). */
+  function makeMain(url: string) {
+    setImages((prev) => [url, ...prev.filter((u) => u !== url)])
   }
 
   function addSize() {
@@ -104,6 +119,10 @@ export default function ProductForm({
     e.preventDefault()
     if (!name.trim()) return setError('Product name is required.')
     if (!price || Number(price) < 0) return setError('Enter a valid price.')
+    if (!isEdit && images.length < 2) {
+      return setError('Add at least 2 photos so buyers can see the product from different angles.')
+    }
+    if (images.length < 1) return setError('Add at least one product image.')
 
     setSaving(true)
     setError('')
@@ -123,6 +142,8 @@ export default function ProductForm({
       }
       if (isEdit && product) {
         await updateProduct(product.id, payload)
+        // Re-sync the gallery (images beyond the cover) to match the editor.
+        await replaceProductImages(product.id, images.slice(1))
       } else {
         const created = await createProduct(sellerId, payload)
         if (images.length > 1) await addProductImages(created.id, images.slice(1))
@@ -149,11 +170,28 @@ export default function ProductForm({
       {error && <p className="mb-4 rounded bg-[#fdecec] px-3 py-2 text-sm text-accent">{error}</p>}
 
       {/* Images */}
-      <label className={label}>Product Images</label>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        {images.map((url) => (
-          <div key={url} className="relative">
-            <img src={url} alt="" className="h-20 w-20 rounded object-cover" />
+      <label className={label}>Product Images *</label>
+      <div className="mb-2 flex flex-wrap items-center gap-3">
+        {images.map((url, i) => (
+          <div key={url} className="group relative">
+            <img
+              src={url}
+              alt=""
+              className={`h-20 w-20 rounded object-cover ${i === 0 ? 'ring-2 ring-primary' : ''}`}
+            />
+            {i === 0 ? (
+              <span className="absolute inset-x-0 bottom-0 rounded-b bg-primary/90 text-center text-[10px] font-semibold text-white">
+                Main
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => makeMain(url)}
+                className="absolute inset-x-0 bottom-0 rounded-b bg-black/60 text-center text-[10px] text-white opacity-0 transition group-hover:opacity-100"
+              >
+                Set as main
+              </button>
+            )}
             <button
               type="button"
               onClick={() => removeImage(url)}
@@ -169,7 +207,11 @@ export default function ProductForm({
           <input type="file" accept="image/*" multiple onChange={handleFiles} className="hidden" />
         </label>
       </div>
-      <p className="mb-4 text-xs text-muted-2">First image is the main thumbnail.</p>
+      <p className="mb-4 text-xs text-muted-2">
+        Add <strong>at least 2 photos</strong> so buyers can see the product from different angles and
+        variations (e.g. colors). The image marked <strong>Main</strong> is the cover shown on listings —
+        hover another to set it as the cover.
+      </p>
 
       <label className={label}>Name *</label>
       <input className="form-input mb-4" value={name} onChange={(e) => setName(e.target.value)} placeholder="Cartoon Astronaut T-Shirt" />
