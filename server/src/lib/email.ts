@@ -1,20 +1,30 @@
 import { env } from './env.js'
 import { supabaseAdmin } from './supabaseAdmin.js'
 
+export interface EmailResult {
+  ok: boolean
+  /** True when sending was skipped (no key / no recipient) rather than attempted. */
+  skipped?: boolean
+  status?: number
+  id?: string
+  error?: string
+}
+
 /**
  * Transactional email via Resend (https://resend.com), called over its REST API
  * so we need no SDK dependency. Sending is best-effort: if RESEND_API_KEY is
  * unset or the request fails, we log and move on — email must never break an
- * order or a fulfillment update.
+ * order or a fulfillment update. Returns a result so callers (e.g. the test
+ * script) can report what happened; the trigger functions ignore it.
  */
-async function sendEmail(to: string | null, subject: string, html: string): Promise<void> {
+async function sendEmail(to: string | null, subject: string, html: string): Promise<EmailResult> {
   if (!env.RESEND_API_KEY) {
     console.warn(`[email] RESEND_API_KEY not set — skipping "${subject}"`)
-    return
+    return { ok: false, skipped: true, error: 'RESEND_API_KEY not set' }
   }
   if (!to) {
     console.warn(`[email] no recipient — skipping "${subject}"`)
-    return
+    return { ok: false, skipped: true, error: 'no recipient' }
   }
   try {
     const res = await fetch('https://api.resend.com/emails', {
@@ -22,12 +32,15 @@ async function sendEmail(to: string | null, subject: string, html: string): Prom
       headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: env.EMAIL_FROM, to, subject, html }),
     })
+    const body = (await res.json().catch(() => ({}))) as { id?: string; message?: string }
     if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      console.error(`[email] send failed (${res.status}) for "${subject}": ${body}`)
+      console.error(`[email] send failed (${res.status}) for "${subject}": ${body.message ?? ''}`)
+      return { ok: false, status: res.status, error: body.message ?? `HTTP ${res.status}` }
     }
+    return { ok: true, status: res.status, id: body.id }
   } catch (err) {
     console.error(`[email] send error for "${subject}":`, err)
+    return { ok: false, error: err instanceof Error ? err.message : String(err) }
   }
 }
 
@@ -132,4 +145,12 @@ export async function sendItemStatusEmail(orderItemId: string, status: string): 
     <p style="margin:0 0 16px;color:#555;">Hi ${name}, your <strong>${productName}</strong> has been delivered. We'd love to hear what you think!</p>
     <p style="margin:0 0 4px;color:#555;">A quick rating helps other shoppers and the sellers on Cara.</p>`
   await sendEmail(email, `How was your ${productName}? Leave a review ⭐`, layout('Enjoying your purchase?', body, 'Write a review', reviewUrl))
+}
+
+/** Diagnostic send to confirm RESEND_API_KEY + EMAIL_FROM work end-to-end. */
+export async function sendTestEmail(to: string): Promise<EmailResult> {
+  const body = `
+    <p style="margin:0 0 12px;color:#555;">This is a test email from your Cara server.</p>
+    <p style="margin:0;color:#555;">If you're reading this, <strong>RESEND_API_KEY</strong> and <strong>EMAIL_FROM</strong> are configured correctly. 🎉</p>`
+  return sendEmail(to, 'Cara email test ✅', layout('Email is working', body, 'Go to Cara', env.CLIENT_ORIGIN))
 }
