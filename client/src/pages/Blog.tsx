@@ -6,12 +6,12 @@ export default function Blog() {
     <>
       <section className="page-banner bg-blog-header [background-position:top_25%_right_0]">
         <h2>#readmore</h2>
-        <p className="text-white">Read all case studies about our products!</p>
+        <p className="text-white">Style notes, shop stories and what's new on Cara.</p>
       </section>
 
       <section className="px-5 pt-24 sm:px-10 lg:px-[150px] lg:pt-[150px]">
         {blogPosts.map((post) => (
-          <div key={post.id} className="relative flex w-full flex-col items-start gap-8 pb-24 md:flex-row md:items-center">
+          <div key={post.id} className="relative flex w-full flex-col items-start gap-8 pb-24 pt-16 md:flex-row md:items-center">
             <div className="w-full md:mr-10 md:w-1/2">
               <img className="h-[300px] w-full object-cover" src={post.image} alt={post.title} />
             </div>
@@ -25,7 +25,11 @@ export default function Blog() {
                 CONTINUE READING
               </a>
             </div>
-            <h1 className="absolute -top-10 left-0 -z-10 text-[70px] font-bold text-[#c9cbce]">{post.date}</h1>
+            {/* Sits in the padding above the row rather than behind it — a
+                negative z-index used to drop it behind the page background. */}
+            <h1 className="pointer-events-none absolute left-0 top-0 select-none text-[56px] font-bold leading-none text-[#b6bac0] sm:text-[70px]">
+              {post.date}
+            </h1>
           </div>
         ))}
       </section>

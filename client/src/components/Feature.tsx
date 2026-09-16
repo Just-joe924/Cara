@@ -1,9 +1,9 @@
 const features = [
-  { img: '/img/features/f1.png', label: 'Free Shipping', badge: 'bg-[#fddde4]' },
+  { img: '/img/features/f1.png', label: 'Pickup or Delivery', badge: 'bg-[#fddde4]' },
   { img: '/img/features/f2.png', label: 'Online Order', badge: 'bg-[#cdebbc]' },
-  { img: '/img/features/f3.png', label: 'Save Money', badge: 'bg-[#d1e8f2]' },
+  { img: '/img/features/f3.png', label: 'Fair Prices', badge: 'bg-[#d1e8f2]' },
   { img: '/img/features/f4.png', label: 'Promotions', badge: 'bg-[#cdd4f8]' },
-  { img: '/img/features/f5.png', label: 'Happy Sell', badge: 'bg-[#f6dbf6]' },
+  { img: '/img/features/f5.png', label: 'Trusted Sellers', badge: 'bg-[#f6dbf6]' },
   { img: '/img/features/f6.png', label: '24/7 Support', badge: 'bg-[#fff2e5]' },
 ]
 
