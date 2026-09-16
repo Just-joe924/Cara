@@ -68,6 +68,44 @@ export default function SellerStorefront() {
           </div>
         </div>
 
+        {(seller.address_line || seller.phone || seller.email) && (
+          <div className="mb-8 grid gap-4 rounded-md border border-[#e2e9e1] p-5 sm:grid-cols-2">
+            {seller.address_line && (
+              <div className="flex items-start gap-3">
+                <i className="fa-solid fa-location-dot mt-1 text-primary"></i>
+                <div className="text-sm">
+                  <span className="block font-semibold text-ink">Visit the shop</span>
+                  <span className="text-muted">
+                    {[seller.address_line, seller.city, seller.state].filter(Boolean).join(', ')}
+                  </span>
+                  {seller.landmark && (
+                    <span className="block text-xs text-muted-2">Close to {seller.landmark}</span>
+                  )}
+                </div>
+              </div>
+            )}
+            {(seller.phone || seller.email) && (
+              <div className="flex items-start gap-3">
+                <i className="fa-solid fa-comments mt-1 text-primary"></i>
+                <div className="text-sm">
+                  <span className="block font-semibold text-ink">Get in touch</span>
+                  {seller.phone && (
+                    <a href={`tel:${seller.phone}`} className="block text-muted hover:text-primary">
+                      {seller.phone}
+                      {seller.phone_alt ? ` · ${seller.phone_alt}` : ''}
+                    </a>
+                  )}
+                  {seller.email && (
+                    <a href={`mailto:${seller.email}`} className="block text-muted hover:text-primary">
+                      {seller.email}
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {products.length === 0 ? (
           <p className="py-12 text-center text-muted">This store has no products yet.</p>
         ) : (

@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { getMySeller } from '../api/sellers'
 import { deleteProduct, listCategories, listMyProducts } from '../api/products'
 import ProductForm from '../components/seller/ProductForm'
+import ShopDetailsForm from '../components/seller/ShopDetailsForm'
+import { formatNaira } from '../lib/money'
 import type { Category, Product, Seller } from '../types'
 
 export default function SellerDashboard() {
@@ -16,6 +18,7 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
+  const [shopFormOpen, setShopFormOpen] = useState(false)
 
   const loadProducts = useCallback(async (sellerId: string) => {
     setProducts(await listMyProducts(sellerId))
@@ -76,6 +79,21 @@ export default function SellerDashboard() {
       </section>
 
       <section className="section-x">
+        {/* Sellers who onboarded before shop addresses existed have none on file,
+            and buyers choosing pay-on-pickup have nowhere to go. */}
+        {!seller.address_line && !shopFormOpen && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-md border-l-[3px] border-[#b26a00] bg-[#fff8ec] px-4 py-3">
+            <p className="text-sm text-[#b26a00]">
+              <i className="fa-solid fa-triangle-exclamation mr-2"></i>
+              Your shop has no address yet — buyers who choose <strong>pay on pickup</strong> won't
+              know where to collect.
+            </p>
+            <button className="btn-primary" onClick={() => setShopFormOpen(true)}>
+              Add shop address
+            </button>
+          </div>
+        )}
+
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-semibold text-ink">Your Products</h2>
@@ -87,7 +105,15 @@ export default function SellerDashboard() {
               ·{' '}
               <Link to={`/store/${seller.id}`} className="font-semibold text-primary">
                 View your storefront
-              </Link>
+              </Link>{' '}
+              ·{' '}
+              <button
+                type="button"
+                onClick={() => setShopFormOpen((open) => !open)}
+                className="font-semibold text-primary hover:underline"
+              >
+                Shop details
+              </button>
             </p>
           </div>
           {!formOpen && (
@@ -96,6 +122,20 @@ export default function SellerDashboard() {
             </button>
           )}
         </div>
+
+        {shopFormOpen && (
+          <div className="mb-8">
+            <ShopDetailsForm
+              seller={seller}
+              userId={user.id}
+              onSaved={(updated) => {
+                setSeller(updated)
+                setShopFormOpen(false)
+              }}
+              onCancel={() => setShopFormOpen(false)}
+            />
+          </div>
+        )}
 
         {formOpen && (
           <div className="mb-8">
@@ -146,7 +186,7 @@ export default function SellerDashboard() {
                         <span className="font-medium text-ink">{p.name}</span>
                       </div>
                     </td>
-                    <td className="py-3">${p.price.toFixed(2)}</td>
+                    <td className="py-3">{formatNaira(p.price)}</td>
                     <td className="py-3">{p.stock}</td>
                     <td className="py-3">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.is_active ? 'bg-primary-soft text-primary' : 'bg-[#f0f0f0] text-muted-2'}`}>

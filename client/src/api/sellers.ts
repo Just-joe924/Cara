@@ -6,7 +6,13 @@ export interface SellerInput {
   brand_name: string | null
   business_type: string | null
   description: string | null
+  email: string | null
   phone: string | null
+  phone_alt: string | null
+  address_line: string | null
+  city: string | null
+  state: string | null
+  landmark: string | null
   website: string | null
   logo_url: string | null
 }
@@ -41,6 +47,18 @@ export async function updateSeller(id: string, patch: Partial<SellerInput>): Pro
     .single()
   if (error) throw error
   return data as Seller
+}
+
+/**
+ * Public: the shops behind a set of products, so checkout can show buyers where
+ * to collect. Returns one row per seller.
+ */
+export async function listPickupLocations(sellerIds: string[]): Promise<Seller[]> {
+  const ids = [...new Set(sellerIds)]
+  if (ids.length === 0) return []
+  const { data, error } = await supabase.from('sellers').select('*').in('id', ids)
+  if (error) throw error
+  return (data ?? []) as Seller[]
 }
 
 /** Public: a seller's storefront by id. */

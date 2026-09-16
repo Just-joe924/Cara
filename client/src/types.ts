@@ -12,7 +12,16 @@ export interface Seller {
   business_type: string | null
   description: string | null
   logo_url: string | null
+  email: string | null
   phone: string | null
+  /** Optional second line — WhatsApp or an alternate number. */
+  phone_alt: string | null
+  /** Street address of the physical shop buyers collect from. */
+  address_line: string | null
+  city: string | null
+  state: string | null
+  /** Optional "close to …" hint. */
+  landmark: string | null
   website: string | null
   is_active: boolean
   created_at: string
