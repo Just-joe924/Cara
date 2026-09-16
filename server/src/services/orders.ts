@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '../lib/supabaseAdmin.js'
-import { sendOrderConfirmation } from '../lib/email.js'
+import { sendOrderReceipt } from '../lib/email.js'
 
 export interface OrderLine {
   product: { id: string; name: string; price: number; stock: number; image_url: string | null }
@@ -52,21 +52,38 @@ export function computeTotal(lines: OrderLine[]): number {
   return lines.reduce((sum, l) => sum + l.product.price * l.quantity, 0)
 }
 
+/** Payment metadata stamped on the order when it is created. */
+export interface OrderPayment {
+  /** 'online' = paid through Paystack; 'pickup' = pays in person on collection. */
+  payment_method: 'online' | 'pickup'
+  fulfilment: 'delivery' | 'pickup'
+  payment_reference?: string | null
+}
+
 /**
  * Create an order row + its order_items (price snapshot). Does NOT touch stock
- * or the cart — callers decide when to fulfill (immediately for COD, on payment
- * for Stripe). Rolls back the order if item insertion fails.
+ * or the cart — callers decide when to fulfill (immediately for pay-on-pickup,
+ * on payment for Paystack). Rolls back the order if item insertion fails.
  */
 export async function createOrderWithItems(
   userId: string,
   shipping: Record<string, unknown> | null,
   lines: OrderLine[],
   status = 'pending',
+  payment: OrderPayment = { payment_method: 'online', fulfilment: 'delivery' },
 ) {
   const total = computeTotal(lines)
   const { data: order, error } = await supabaseAdmin
     .from('orders')
-    .insert({ user_id: userId, status, total_amount: total, shipping_address: shipping })
+    .insert({
+      user_id: userId,
+      status,
+      total_amount: total,
+      shipping_address: shipping,
+      payment_method: payment.payment_method,
+      fulfilment: payment.fulfilment,
+      payment_reference: payment.payment_reference ?? null,
+    })
     .select()
     .single()
 
@@ -106,8 +123,9 @@ export async function clearCart(userId: string): Promise<void> {
 
 /**
  * Idempotently mark an order paid: decrement stock from its order_items, clear
- * the owner's cart, and set status='paid'. Safe to call multiple times (Stripe
- * may deliver the webhook more than once). Returns what happened.
+ * the owner's cart, and set status='paid'. Safe to call multiple times (Paystack
+ * may deliver the webhook more than once, and /checkout/verify races it).
+ * Returns what happened.
  */
 export async function markOrderPaid(orderId: string): Promise<'fulfilled' | 'already' | 'missing'> {
   const { data: order } = await supabaseAdmin
@@ -143,6 +161,6 @@ export async function markOrderPaid(orderId: string): Promise<'fulfilled' | 'alr
 
   await supabaseAdmin.from('orders').update({ status: 'paid' }).eq('id', orderId)
   await clearCart(order.user_id)
-  await sendOrderConfirmation(orderId)
+  await sendOrderReceipt(orderId)
   return 'fulfilled'
 }

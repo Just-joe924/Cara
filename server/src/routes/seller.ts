@@ -26,7 +26,7 @@ sellerRouter.get('/orders', requireAuth, async (req: Request, res: Response) => 
 
   const { data: items, error } = await supabaseAdmin
     .from('order_items')
-    .select('id, quantity, price_at_purchase, size, status, product_id, products(name, image_url), orders(id, status, created_at, shipping_address)')
+    .select('id, quantity, price_at_purchase, size, status, product_id, products(name, image_url), orders(id, status, created_at, shipping_address, payment_method, fulfilment)')
     .in('product_id', productIds)
   if (error) return res.status(500).json({ error: error.message })
 
@@ -42,6 +42,8 @@ sellerRouter.get('/orders', requireAuth, async (req: Request, res: Response) => 
           status: order.status,
           created_at: order.created_at,
           shipping_address: order.shipping_address,
+          payment_method: order.payment_method ?? 'online',
+          fulfilment: order.fulfilment ?? 'delivery',
         },
         items: [],
       })
