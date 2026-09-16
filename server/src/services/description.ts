@@ -8,6 +8,8 @@
  * the rest of the app calls this one function and won't need to change.
  */
 
+import { formatNaira } from '../lib/money.js'
+
 export interface DescribeInput {
   name?: string
   brand?: string | null
@@ -58,7 +60,7 @@ function composeTemplate(input: DescribeInput): string {
 
   // 5. Price / CTA
   sentences.push(
-    price ? `Yours for $${price.toFixed(2)} — add it to your cart today.` : 'Add it to your cart today.',
+    price ? `Yours for ${formatNaira(price)} — add it to your cart today.` : 'Add it to your cart today.',
   )
 
   return sentences.join(' ')
