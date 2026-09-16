@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listSellerOrders, updateItemStatus, type SellerOrder } from '../api/sellerOrders'
+import { formatNaira } from '../lib/money'
 
 const STATUSES = ['processing', 'shipped', 'delivered', 'cancelled']
 
@@ -81,14 +82,27 @@ export default function SellerOrders() {
                 <div key={order.id} className="rounded-lg border border-[#e1e1e1] p-5">
                   <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-[#f0f0f0] pb-3">
                     <div>
-                      <p className="font-semibold text-ink">Order #{order.id.slice(0, 8)}</p>
+                      <p className="font-semibold text-ink">Order #{order.id.slice(0, 8).toUpperCase()}</p>
                       <p className="text-xs text-muted-2">
-                        {new Date(order.created_at).toLocaleDateString()} · Payment: {order.status}
+                        {new Date(order.created_at).toLocaleDateString()}
                       </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${order.fulfilment === 'pickup' ? 'bg-primary-soft text-primary' : 'bg-[#d1e8f2] text-[#0b6ba8]'}`}>
+                          <i className={`fa-solid ${order.fulfilment === 'pickup' ? 'fa-store' : 'fa-truck'} mr-1`}></i>
+                          {order.fulfilment === 'pickup' ? 'Collecting in store' : 'Delivery'}
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${order.payment_method === 'pickup' ? 'bg-[#fff2e5] text-[#b26a00]' : 'bg-[#e9f9ef] text-[#059669]'}`}>
+                          {order.payment_method === 'pickup' ? 'Collect payment on handover' : 'Paid online'}
+                        </span>
+                      </div>
                     </div>
                     <div className="text-right text-xs text-muted">
                       <p className="font-semibold text-ink">{ship.full_name ?? '—'}</p>
-                      <p>{[ship.address, ship.city, ship.country].filter(Boolean).join(', ')}</p>
+                      {ship.phone && <p>{ship.phone}</p>}
+                      {ship.email && <p>{ship.email}</p>}
+                      {order.fulfilment === 'delivery' && (
+                        <p>{[ship.address, ship.city, ship.state].filter(Boolean).join(', ')}</p>
+                      )}
                     </div>
                   </div>
 
@@ -104,7 +118,7 @@ export default function SellerOrders() {
                           <p className="text-sm font-medium text-ink">{it.name}</p>
                           <p className="text-xs text-muted-2">
                             Qty {it.quantity}
-                            {it.size && ` · ${it.size}`} · ${it.price_at_purchase.toFixed(2)}
+                            {it.size && ` · ${it.size}`} · {formatNaira(it.price_at_purchase)}
                           </p>
                         </div>
                         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${statusColor[it.status] ?? ''}`}>

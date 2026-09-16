@@ -52,12 +52,12 @@ async function authHeader(): Promise<Record<string, string>> {
 }
 
 /**
- * Start a Stripe Checkout session for the current cart and return the hosted
+ * Start a Paystack transaction for the current cart and return the hosted
  * checkout URL to redirect the browser to.
  */
 export async function createCheckoutSession(
   shippingAddress: Record<string, unknown>,
-): Promise<{ url: string }> {
+): Promise<{ url: string; reference: string }> {
   const res = await fetch(`${API_URL}/api/checkout/session`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...(await authHeader()) },
@@ -69,22 +69,22 @@ export async function createCheckoutSession(
       const names = json.items.map((i: { name: string }) => i.name).join(', ')
       throw new Error(`Some items are out of stock: ${names}`)
     }
-    if (res.status === 501) throw new Error('Card payments are not enabled yet.')
+    if (res.status === 501) throw new Error('Online payments are not enabled yet.')
     throw new Error(json.error || 'Failed to start checkout')
   }
-  if (!json.url) throw new Error('Checkout session did not return a URL')
-  return { url: json.url as string }
+  if (!json.url) throw new Error('Checkout did not return a payment URL')
+  return { url: json.url as string, reference: json.reference as string }
 }
 
-/** Confirm a completed Stripe session and fulfill its order. */
+/** Confirm a completed Paystack transaction and fulfill its order. */
 export async function verifyCheckout(
-  sessionId: string,
+  reference: string,
 ): Promise<{ paid: boolean; order_id?: string }> {
   const res = await fetch(
-    `${API_URL}/api/checkout/verify?session_id=${encodeURIComponent(sessionId)}`,
+    `${API_URL}/api/checkout/verify?reference=${encodeURIComponent(reference)}`,
     { headers: await authHeader() },
   )
   const json = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(json.error || 'Failed to verify checkout')
+  if (!res.ok) throw new Error(json.error || 'Failed to verify payment')
   return { paid: Boolean(json.paid), order_id: json.order_id }
 }

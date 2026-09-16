@@ -7,7 +7,8 @@ type Status = 'verifying' | 'paid' | 'unpaid' | 'error'
 
 export default function CheckoutSuccess() {
   const [params] = useSearchParams()
-  const sessionId = params.get('session_id')
+  // Paystack appends both `reference` and `trxref` to the callback URL.
+  const reference = params.get('reference') ?? params.get('trxref')
   const { clearCart } = useCart()
 
   const [status, setStatus] = useState<Status>('verifying')
@@ -19,13 +20,13 @@ export default function CheckoutSuccess() {
     if (ran.current) return // guard React 18 StrictMode double-invoke
     ran.current = true
 
-    if (!sessionId) {
+    if (!reference) {
       setStatus('error')
-      setMessage('Missing checkout session.')
+      setMessage('Missing payment reference.')
       return
     }
 
-    verifyCheckout(sessionId)
+    verifyCheckout(reference)
       .then(async (result) => {
         setOrderId(result.order_id)
         if (result.paid) {
@@ -39,7 +40,7 @@ export default function CheckoutSuccess() {
         setStatus('error')
         setMessage(err instanceof Error ? err.message : 'Verification failed')
       })
-  }, [sessionId, clearCart])
+  }, [reference, clearCart])
 
   return (
     <section className="section-x flex min-h-[60vh] flex-col items-center justify-center text-center">
@@ -60,7 +61,7 @@ export default function CheckoutSuccess() {
                 Order <strong>#{orderId.slice(0, 8)}</strong> is confirmed.{' '}
               </>
             )}
-            Thank you for shopping with Cara.
+            A receipt is on its way to your email.
           </p>
           <div className="mt-3 flex flex-wrap justify-center gap-3">
             <Link to="/account">

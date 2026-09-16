@@ -18,6 +18,9 @@ export interface SellerOrder {
     status: string
     created_at: string
     shipping_address: Record<string, unknown> | null
+    /** 'online' = already paid via Paystack; 'pickup' = collect cash on handover. */
+    payment_method: 'online' | 'pickup'
+    fulfilment: 'delivery' | 'pickup'
   }
   items: SellerOrderItem[]
 }
