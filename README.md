@@ -1,8 +1,12 @@
-# Cara — Fashion E-commerce (full-stack)
+# Cara — Marketplace (full-stack)
 
-A full-stack e-commerce app, evolved from the original static HTML/CSS Cara template.
+A full-stack marketplace where sellers open a storefront and buyers shop across
+every store. Evolved from the original static HTML/CSS Cara template.
 
-**Stack:** Vite + React + TypeScript + **Tailwind** (client) · Express + TypeScript (server) · **Supabase** (Postgres/Auth/RLS) · Stripe Checkout (later).
+Prices are in **naira**. Buyers pay online through Paystack (card, bank transfer,
+USSD) or reserve an order and pay the seller when they collect it in person.
+
+**Stack:** Vite + React + TypeScript + **Tailwind** (client) · Express + TypeScript (server) · **Supabase** (Postgres/Auth/RLS) · **Paystack** (NGN payments) · **Resend** (email).
 
 ## Quick start
 
@@ -21,23 +25,27 @@ client/    Vite + React + TS + Tailwind frontend
   src/context     CartContext (+ AuthContext, Phase 3)
   src/pages       Home, Shop, Product, Cart, Checkout, Blog, About, Contact, NotFound
   src/data        products.ts, blog.ts (local data until Phase 3 wires Supabase)
-server/    Express + TS API — thin: order finalization, Stripe, admin (Phase 4+)
+server/    Express + TS API — orders, Paystack payments, contact form, seller, admin
 supabase/  migrations/0001_init.sql (schema + RLS + triggers), seed/ (DummyJSON importer)
 legacy/    Original static HTML/CSS/JS site, kept for reference
 ```
 
 ## Features
 
-- Responsive Cara UI rebuilt in Tailwind (mobile nav, hero, product grid, banners, cart, checkout, blog, about, contact).
-- Working cart with live totals and a header badge (localStorage now; moves to Supabase `cart_items` in Phase 3).
-- Shop search + brand/category filter + sort; checkout flow with validation and order summary.
+- Responsive Cara UI in Tailwind (mobile nav, hero, product grid, cart, checkout, blog, about, contact).
+- Seller storefronts: onboarding with shop address + contact details, product management, per-item fulfillment.
+- Cart, wishlist and reviews backed by Supabase with RLS.
+- Checkout in naira: pick up at the shop or have it delivered; pay online via Paystack or pay on collection.
+- Transactional email via Resend — order receipts, "ready for collection", review requests, contact-form forwarding.
+- Admin dashboard: users, products, orders, revenue.
 
 ## Roadmap
 
-| Phase | Scope | Status |
-| ----- | ----- | ------ |
-| 1 | Monorepo + full Tailwind migration | ✅ |
-| 2 | Supabase schema + RLS + DummyJSON seed | ✅ (apply per SETUP.md) |
-| 3 | Frontend ↔ Supabase: auth, products-from-DB, DB cart, wishlist | ⏳ |
-| 4 | Express order-finalize endpoint | ✅ |
-| 5 | Stripe Checkout (session + webhook + verify) | ✅ |
+| Scope | Status |
+| ----- | ------ |
+| Monorepo + full Tailwind migration | ✅ |
+| Supabase schema + RLS | ✅ (apply per SETUP.md) |
+| Frontend ↔ Supabase: auth, products, cart, wishlist, reviews | ✅ |
+| Express order-finalize endpoint | ✅ |
+| Paystack checkout (initialize + webhook + verify) | ✅ |
+| Naira pricing, pay-on-pickup, emailed receipts, seller shop addresses | ✅ |
