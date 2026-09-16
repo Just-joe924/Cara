@@ -226,9 +226,9 @@ export default function ProductForm({
             ))}
           </select>
         </div>
-        <div className="mb-4 w-28">
-          <label className={label}>Price ($) *</label>
-          <input type="number" min={0} step="0.01" className="form-input" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <div className="mb-4 w-36">
+          <label className={label}>Price (₦) *</label>
+          <input type="number" min={0} step="1" className="form-input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="12500" />
         </div>
         <div className="mb-4 w-24">
           <label className={label}>Stock</label>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { formatNaira } from '../lib/money'
 
 export default function Cart() {
   const { items, subtotal, removeFromCart, setQuantity, clearCart } = useCart()
@@ -62,7 +63,7 @@ export default function Cart() {
                     {item.product.name}
                     {item.size && <span className="block text-xs text-muted-2">{item.size}</span>}
                   </td>
-                  <td className="pt-[15px]">${item.product.price.toFixed(2)}</td>
+                  <td className="pt-[15px]">{formatNaira(item.product.price)}</td>
                   <td className="pt-[15px]">
                     <input
                       type="number"
@@ -72,7 +73,7 @@ export default function Cart() {
                       className="w-[70px] rounded border border-[#e1e1e1] py-2.5 pl-3.5 pr-1.5 text-center"
                     />
                   </td>
-                  <td className="pt-[15px]">${(item.product.price * item.quantity).toFixed(2)}</td>
+                  <td className="pt-[15px]">{formatNaira(item.product.price * item.quantity)}</td>
                 </tr>
               ))
             )}
@@ -112,7 +113,7 @@ export default function Cart() {
             <tbody className="text-[13px]">
               <tr>
                 <td className="w-1/2 border border-[#e2e9e1] p-2.5">Cart Subtotal</td>
-                <td className="w-1/2 border border-[#e2e9e1] p-2.5">${subtotal.toFixed(2)}</td>
+                <td className="w-1/2 border border-[#e2e9e1] p-2.5">{formatNaira(subtotal)}</td>
               </tr>
               <tr>
                 <td className="border border-[#e2e9e1] p-2.5">Shipping</td>
@@ -120,7 +121,7 @@ export default function Cart() {
               </tr>
               <tr>
                 <td className="border border-[#e2e9e1] p-2.5"><strong>Total</strong></td>
-                <td className="border border-[#e2e9e1] p-2.5"><strong>${subtotal.toFixed(2)}</strong></td>
+                <td className="border border-[#e2e9e1] p-2.5"><strong>{formatNaira(subtotal)}</strong></td>
               </tr>
             </tbody>
           </table>

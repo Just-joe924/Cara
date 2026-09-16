@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { fetchOrders } from '../api/orders'
 import OrderTracker from '../components/OrderTracker'
+import { formatNaira } from '../lib/money'
 import type { Order } from '../types'
 
 const statusColor: Record<string, string> = {
@@ -128,7 +129,7 @@ export default function Account() {
                         </span>
                         <span className="text-xs text-muted-2">×{item.quantity}</span>
                         <span className="text-sm font-semibold text-primary">
-                          ${item.price_at_purchase.toFixed(2)}
+                          {formatNaira(item.price_at_purchase)}
                         </span>
                       </li>
                     ))}
@@ -139,7 +140,7 @@ export default function Account() {
                   </div>
 
                   <div className="text-right text-sm font-bold text-ink">
-                    Total: ${order.total_amount.toFixed(2)}
+                    Total: {formatNaira(order.total_amount)}
                   </div>
                 </div>
               ))}

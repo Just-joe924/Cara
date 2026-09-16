@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useState } from 'react'
 import { fetchOrders, type AdminOrder } from '../../api/admin'
-
-const money = (n: number) => `$${Number(n).toFixed(2)}`
+import { formatNaira as money } from '../../lib/money'
 
 const statusBadge: Record<string, string> = {
   pending: 'bg-[#fff2e5] text-[#b26a00]',

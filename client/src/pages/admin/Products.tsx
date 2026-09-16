@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchProducts, setProductActive, type AdminProduct } from '../../api/admin'
+import { formatNaira } from '../../lib/money'
 
 export default function Products() {
   const [products, setProducts] = useState<AdminProduct[]>([])
@@ -87,7 +88,7 @@ export default function Products() {
                   </td>
                   <td className="px-4 py-3 text-muted">{p.sellers?.brand_name || p.sellers?.business_name || '—'}</td>
                   <td className="px-4 py-3 text-muted">{p.categories?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-ink">${Number(p.price).toFixed(2)}</td>
+                  <td className="px-4 py-3 text-ink">{formatNaira(p.price)}</td>
                   <td className="px-4 py-3 text-ink">{p.stock}</td>
                   <td className="px-4 py-3 text-right">
                     <button

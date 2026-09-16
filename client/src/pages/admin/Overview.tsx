@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchStats, type AdminStats } from '../../api/admin'
-
-const money = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+import { formatNaira as money } from '../../lib/money'
 
 function Card({ icon, label, value, tint }: { icon: string; label: string; value: string; tint: string }) {
   return (
@@ -49,7 +48,7 @@ export default function Overview() {
         <Card icon="fa-users" label="Users" value={String(stats.counts.users)} tint="bg-[#e7f0ff] text-[#2563eb]" />
         <Card icon="fa-store" label="Sellers" value={String(stats.counts.sellers)} tint="bg-primary-soft text-primary" />
         <Card icon="fa-box" label="Products" value={String(stats.counts.products)} tint="bg-[#fff2e5] text-[#b26a00]" />
-        <Card icon="fa-sack-dollar" label="Revenue" value={money(stats.revenue)} tint="bg-[#e9f9ef] text-[#059669]" />
+        <Card icon="fa-naira-sign" label="Revenue" value={money(stats.revenue)} tint="bg-[#e9f9ef] text-[#059669]" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

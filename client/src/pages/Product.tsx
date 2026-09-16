@@ -9,6 +9,7 @@ import { getProductBySlug, listRelated } from '../api/products'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
+import { formatNaira } from '../lib/money'
 import type { Product as ProductType } from '../types'
 
 export default function Product() {
@@ -118,7 +119,7 @@ export default function Product() {
               </span>
             </a>
           )}
-          <h2 className="text-[26px] font-semibold text-ink">${product.price}</h2>
+          <h2 className="text-[26px] font-semibold text-ink">{formatNaira(product.price)}</h2>
           <p className={`mt-2 text-sm font-semibold ${outOfStock ? 'text-accent' : 'text-primary'}`}>
             {outOfStock ? 'Out of stock' : `In stock (${product.stock} available)`}
           </p>

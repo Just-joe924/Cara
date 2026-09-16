@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useWishlist } from '../context/WishlistContext'
 import { useCart } from '../context/CartContext'
+import { formatNaira } from '../lib/money'
 
 export default function Wishlist() {
   const { items, loading, toggle } = useWishlist()
@@ -39,7 +40,7 @@ export default function Wishlist() {
                   <span className="text-xs text-muted-2">{product.categories?.name ?? ''}</span>
                   <h5 className="pt-[7px] text-sm text-[#1a1a1a]">{product.name}</h5>
                   <h4 className="pt-[7px] text-[15px] font-bold text-primary">
-                    ${product.price}
+                    {formatNaira(product.price)}
                   </h4>
                 </div>
                 <div className="absolute bottom-5 right-2.5 flex gap-2">

@@ -4,6 +4,7 @@ import type { Product } from '../types'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
+import { formatNaira } from '../lib/money'
 import StarRating from './StarRating'
 
 export default function ProductCard({ product }: { product: Product }) {
@@ -58,7 +59,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <span className="text-[11px] text-muted-2">({product.rating.count})</span>
           </div>
         )}
-        <h4 className="pt-[7px] text-[15px] font-bold text-primary">${product.price}</h4>
+        <h4 className="pt-[7px] text-[15px] font-bold text-primary">{formatNaira(product.price)}</h4>
       </div>
       <button
         className="absolute bottom-5 right-2.5 flex h-10 w-10 items-center justify-center rounded-full border border-primary-border bg-primary-soft text-primary transition hover:bg-primary hover:text-white"

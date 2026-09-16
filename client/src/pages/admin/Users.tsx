@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { deleteUser, fetchUsers, setUserRole, type AdminUser } from '../../api/admin'
 import { useAuth } from '../../context/AuthContext'
+import { formatNaira as money } from '../../lib/money'
 
 const ROLES = ['customer', 'seller', 'admin']
-const money = (n: number) => `$${n.toFixed(2)}`
 
 const roleBadge: Record<string, string> = {
   admin: 'bg-[#efe7ff] text-[#6d28d9]',
