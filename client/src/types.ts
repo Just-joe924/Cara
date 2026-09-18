@@ -2,6 +2,15 @@ export interface Category {
   id: string
   name: string
   slug: string
+  /** Null for a top-level group. Products always attach to a child (leaf). */
+  parent_id: string | null
+  position: number
+}
+
+/** A top-level group with the leaves sellers actually choose from. */
+export interface CategoryGroup {
+  group: Category
+  children: Category[]
 }
 
 export interface Seller {

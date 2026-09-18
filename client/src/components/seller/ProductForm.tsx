@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import type { Category, Product, ProductSize } from '../../types'
+import { groupCategories, suggestCategoryId } from '../../lib/categories'
 import {
   addProductImages,
   createProduct,
@@ -32,6 +33,10 @@ export default function ProductForm({
 
   const [name, setName] = useState(product?.name ?? '')
   const [categoryId, setCategoryId] = useState(product?.category_id ?? '')
+  // True once the seller touches the category themselves — after that we stop
+  // re-suggesting, so typing in the name field can never undo their choice.
+  const [categoryTouched, setCategoryTouched] = useState(Boolean(product?.category_id))
+  const [suggested, setSuggested] = useState(false)
   const [price, setPrice] = useState(product ? String(product.price) : '')
   const [stock, setStock] = useState(product ? String(product.stock) : '1')
   const [condition, setCondition] = useState('')
@@ -54,6 +59,21 @@ export default function ProductForm({
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  const grouped = useMemo(() => groupCategories(categories), [categories])
+
+  /**
+   * Suggest a category from the product name, but only until the seller picks
+   * one themselves. The suggestion is a starting point, never a decision — they
+   * know the product, the keyword list doesn't.
+   */
+  function handleNameChange(value: string) {
+    setName(value)
+    if (categoryTouched) return
+    const guess = suggestCategoryId(value, categories)
+    setCategoryId(guess ?? '')
+    setSuggested(guess !== null)
+  }
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -118,6 +138,7 @@ export default function ProductForm({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!name.trim()) return setError('Product name is required.')
+    if (!categoryId) return setError('Pick the category that best describes this product.')
     if (!price || Number(price) < 0) return setError('Enter a valid price.')
     if (!isEdit && images.length < 2) {
       return setError('Add at least 2 photos so buyers can see the product from different angles.')
@@ -214,17 +235,39 @@ export default function ProductForm({
       </p>
 
       <label className={label}>Name *</label>
-      <input className="form-input mb-4" value={name} onChange={(e) => setName(e.target.value)} placeholder="Cartoon Astronaut T-Shirt" />
+      <input className="form-input mb-4" value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Men's Cotton Polo Shirt" />
 
       <div className="flex flex-wrap gap-4">
-        <div className="mb-4 flex-1">
-          <label className={label}>Category</label>
-          <select className="form-input" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">Uncategorized</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+        <div className="mb-4 min-w-[240px] flex-1">
+          <label className={label}>Category *</label>
+          <select
+            className="form-input"
+            value={categoryId}
+            onChange={(e) => {
+              setCategoryId(e.target.value)
+              setCategoryTouched(true)
+              setSuggested(false)
+            }}
+          >
+            <option value="">Choose a category…</option>
+            {grouped.map(({ group, children }) => (
+              <optgroup key={group.id} label={group.name}>
+                {children.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
+          {suggested ? (
+            <p className="mt-1 text-xs text-primary">
+              <i className="fa-solid fa-wand-magic-sparkles mr-1"></i>
+              Suggested from the name — change it if it's not right.
+            </p>
+          ) : (
+            <p className="mt-1 text-xs text-muted-2">
+              Pick the most specific option. Buyers filter the shop by this.
+            </p>
+          )}
         </div>
         <div className="mb-4 w-36">
           <label className={label}>Price (₦) *</label>

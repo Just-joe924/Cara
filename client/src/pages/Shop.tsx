@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Newsletter from '../components/Newsletter'
 import ProductCard from '../components/ProductCard'
 import { listCategories, listProducts } from '../api/products'
+import { groupCategories, slugsUnder } from '../lib/categories'
 import type { Category, Product } from '../types'
 
 type SortKey = 'newest' | 'price-asc' | 'price-desc' | 'name'
@@ -41,12 +42,18 @@ export default function Shop() {
     }
   }, [])
 
+  const grouped = useMemo(() => groupCategories(categories), [categories])
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase()
+    // Picking a group matches every leaf under it, so "Electronics" shows
+    // laptops, cameras and headphones alike.
+    const allowed = category === 'all' ? null : new Set(slugsUnder(categories, category))
+
     const filtered = products.filter((p) => {
       const brand = `${p.sellers?.brand_name ?? ''} ${p.sellers?.business_name ?? ''}`.toLowerCase()
       const matchesQuery = !q || p.name.toLowerCase().includes(q) || brand.includes(q)
-      const matchesCategory = category === 'all' || p.categories?.slug === category
+      const matchesCategory = !allowed || (p.categories?.slug ? allowed.has(p.categories.slug) : false)
       return matchesQuery && matchesCategory
     })
 
@@ -66,7 +73,7 @@ export default function Shop() {
         break
     }
     return sorted
-  }, [products, query, category, sort])
+  }, [products, categories, query, category, sort])
 
   const hasActiveFilters = query.trim() !== '' || category !== 'all' || sort !== 'newest'
 
@@ -101,10 +108,15 @@ export default function Shop() {
             Category
             <select value={category} onChange={(e) => setCategory(e.target.value)} className={selectClass}>
               <option value="all">All Categories</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.slug}>
-                  {c.name}
-                </option>
+              {grouped.map(({ group, children }) => (
+                <optgroup key={group.id} label={group.name}>
+                  <option value={group.slug}>All {group.name}</option>
+                  {children.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {c.name}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </label>
